@@ -14,4 +14,50 @@
 
 ## システム構成
 
+Rust/AxumでHTTPサーバーを動かし、MaudでHTMLを生成します。画面の部分更新にはhtmx、スタイルにはDaisyUIを利用します。イベントと参加者はSeaORMを通じてPostgreSQLに保存されます。
+
+## 起動方法
+
+1. 環境変数を準備します。
+
+   ```sh
+   cp .env.example .env
+   source .env
+   ```
+
+2. PostgreSQLを起動します。
+
+   ```sh
+   docker compose up -d
+   ```
+
+3. 初回およびスキーマ更新時にマイグレーションを適用します。
+
+   ```sh
+   cargo run -p migration -- up
+   ```
+
+4. アプリを起動し、<http://localhost:3000> を開きます。
+
+   ```sh
+   cargo run
+   ```
+
+## サンプルの機能
+
+- イベントの作成・一覧表示・詳細表示・削除
+- 参加者の追加・削除
+- 出欠（未定・参加予定・欠席）の変更
+- htmxによる参加者とイベントカードの部分更新
+
+## マイグレーション
+
+マイグレーションはアプリ起動時には実行されません。明示的に実行してください。
+
+```sh
+cargo run -p migration -- up    # 未適用分を適用
+cargo run -p migration -- down  # 直近の適用を戻す
+```
+
+新しいマイグレーションは `migration/src` にSeaORM Migrationの実装として追加し、`migration/src/lib.rs` の `Migrator::migrations` に登録します。
 

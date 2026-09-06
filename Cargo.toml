@@ -3,6 +3,7 @@ resolver = "3"
 members = [
     "apps/renge-web",
     "domains/account",
+    "domains/event",
     "infra/postgres/renge-orm",
     "infra/postgres/migration"
 ]
@@ -11,6 +12,7 @@ members = [
 # プロダクトクレート
 apps-renge-web = { path = "apps/renge-web" }
 domains-account = { path = "domains/account" }
+domains-event = { path = "domains/event" }
 infra-postgres-renge-orm = { path = "infra/postgres/renge-orm" }
 
 # 依存

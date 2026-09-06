@@ -1,5 +1,7 @@
 mod entities;
+pub mod state;
 
+use crate::state::AppState;
 use axum::{
     Form, Router,
     extract::{Path, State},
@@ -11,19 +13,14 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use entities::{event, participant};
 use maud::{DOCTYPE, Markup, html};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, DbErr, EntityTrait, QueryFilter,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter,
     QueryOrder, Set,
 };
 use serde::Deserialize;
-use std::env;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
 
-#[derive(Clone)]
-struct AppState {
-    db: DatabaseConnection,
-}
 #[derive(Deserialize)]
 struct EventForm {
     title: String,
@@ -87,8 +84,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .unwrap_or_else(|_| "renge=debug,tower_http=info".into()),
         )
         .init();
-    let url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL が未設定です。.env.example を参考に設定してください。");
     let app = Router::new()
         .route("/", get(index))
         .route("/events", post(create_event))
@@ -102,9 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/events/{id}/participants/{participant_id}",
             axum::routing::delete(delete_participant),
         )
-        .with_state(AppState {
-            db: Database::connect(url).await?,
-        })
+        .with_state(AppState::from_env().await?)
         .layer(TraceLayer::new_for_http());
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
     tracing::info!("http://localhost:3000 で蓮華を起動しました");
@@ -115,7 +108,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn index(State(s): State<AppState>) -> Result<Html<String>, AppError> {
     let events = event::Entity::find()
         .order_by_desc(event::Column::StartsAt)
-        .all(&s.db)
+        .all(&s.dbc)
         .await?;
     Ok(Html(layout("イベント一覧", event_index(events))))
 }
@@ -123,11 +116,11 @@ async fn show_event(
     State(s): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<Html<String>, AppError> {
-    let event = find_event(&s.db, id).await?;
+    let event = find_event(&s.dbc, id).await?;
     let people = participant::Entity::find()
         .filter(participant::Column::EventId.eq(id))
         .order_by_asc(participant::Column::CreatedAt)
-        .all(&s.db)
+        .all(&s.dbc)
         .await?;
     Ok(Html(layout(&event.title, event_detail(&event, people))))
 }
@@ -144,7 +137,7 @@ async fn create_event(
         location: Set(optional(&f.location)),
         created_at: Set(Utc::now()),
     }
-    .insert(&s.db)
+    .insert(&s.dbc)
     .await?;
     Ok(if htmx(&headers) {
         Html(event_card(&model).into_string()).into_response()
@@ -157,7 +150,7 @@ async fn delete_event(
     headers: HeaderMap,
     Path(id): Path<Uuid>,
 ) -> Result<Response, AppError> {
-    event::Entity::delete_by_id(id).exec(&s.db).await?;
+    event::Entity::delete_by_id(id).exec(&s.dbc).await?;
     Ok(if htmx(&headers) {
         StatusCode::NO_CONTENT.into_response()
     } else {
@@ -170,7 +163,7 @@ async fn create_participant(
     Path(id): Path<Uuid>,
     Form(f): Form<ParticipantForm>,
 ) -> Result<Response, AppError> {
-    find_event(&s.db, id).await?;
+    find_event(&s.dbc, id).await?;
     let model = participant::ActiveModel {
         id: Set(Uuid::new_v4()),
         event_id: Set(id),
@@ -179,7 +172,7 @@ async fn create_participant(
         attendance: Set("pending".into()),
         created_at: Set(Utc::now()),
     }
-    .insert(&s.db)
+    .insert(&s.dbc)
     .await?;
     Ok(if htmx(&headers) {
         Html(participant_row(id, &model).into_string()).into_response()
@@ -197,12 +190,12 @@ async fn update_attendance(
         .ok_or_else(|| AppError::BadRequest("不正な出欠状態です。".into()))?;
     let model = participant::Entity::find_by_id(participant_id)
         .filter(participant::Column::EventId.eq(event_id))
-        .one(&s.db)
+        .one(&s.dbc)
         .await?
         .ok_or(AppError::NotFound)?;
     let mut active: participant::ActiveModel = model.into();
     active.attendance = Set(value.value().into());
-    let model = active.update(&s.db).await?;
+    let model = active.update(&s.dbc).await?;
     Ok(if htmx(&headers) {
         Html(participant_row(event_id, &model).into_string()).into_response()
     } else {
@@ -217,7 +210,7 @@ async fn delete_participant(
     participant::Entity::delete_many()
         .filter(participant::Column::Id.eq(participant_id))
         .filter(participant::Column::EventId.eq(event_id))
-        .exec(&s.db)
+        .exec(&s.dbc)
         .await?;
     Ok(if htmx(&headers) {
         StatusCode::NO_CONTENT.into_response()

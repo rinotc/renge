@@ -1,4 +1,5 @@
-pub mod state;
+mod state;
+mod views;
 
 use crate::state::AppState;
 use axum::{
@@ -19,6 +20,7 @@ use serde::Deserialize;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
+use crate::views::layout::layout;
 
 #[derive(Deserialize)]
 struct EventForm {
@@ -241,9 +243,6 @@ fn htmx(headers: &HeaderMap) -> bool {
     headers.get("HX-Request").and_then(|h| h.to_str().ok()) == Some("true")
 }
 
-fn layout(title: &str, content: Markup) -> String {
-    html! { (DOCTYPE) html lang="ja" data-theme="light" { head { meta charset="utf-8"; meta name="viewport" content="width=device-width, initial-scale=1"; title { (title) " | 蓮華" } link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5"; script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" {} script src="https://unpkg.com/htmx.org@2.0.4" {} } body class="min-h-screen bg-base-200" { header class="navbar bg-base-100 shadow-sm" { div class="mx-auto w-full max-w-6xl px-4" { a href="/" class="text-xl font-bold" { "蓮華" } span class="ml-3 text-sm text-base-content/60" { "イベント管理" } } } main class="mx-auto max-w-6xl p-4 md:p-8" { (content) } } } }.into_string()
-}
 fn event_index(events: Vec<event::Model>) -> Markup {
     html! { div class="mb-8" { h1 class="text-3xl font-bold" { "イベント一覧" } p class="text-base-content/60" { "準備の苦労を、綺麗なイベントとして結実させましょう。" } } div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]" { section { div id="event-list" class="grid gap-4 md:grid-cols-2" { @if events.is_empty() { div class="alert alert-info md:col-span-2" { span { "まだイベントがありません。右のフォームから作成できます。" } } } @for event in events { (event_card(&event)) } } } aside class="card h-fit bg-base-100 shadow" { div class="card-body" { h2 class="card-title" { "イベントを作成" } form hx-post="/events" hx-target="#event-list" hx-swap="afterbegin" hx-on::after-request="if(event.detail.successful) this.reset()" class="space-y-3" { label class="form-control" { div class="label" { span class="label-text" { "イベント名" } } input class="input input-bordered" name="title" required; } label class="form-control" { div class="label" { span class="label-text" { "開催日時" } } input class="input input-bordered" type="datetime-local" name="starts_at" required; } label class="form-control" { div class="label" { span class="label-text" { "会場" } } input class="input input-bordered" name="location"; } label class="form-control" { div class="label" { span class="label-text" { "説明" } } textarea class="textarea textarea-bordered" name="description" {} } button class="btn btn-primary w-full" type="submit" { "作成する" } } } } } }
 }

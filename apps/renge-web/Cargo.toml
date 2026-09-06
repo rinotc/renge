@@ -9,9 +9,8 @@ infra-postgres-renge-orm = { workspace = true }
 
 # external crate
 axum = { workspace = true }
+askama = { workspace = true }
 chrono = { workspace = true }
-
-maud = { workspace = true }
 sea-orm = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }

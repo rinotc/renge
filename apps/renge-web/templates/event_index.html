@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold">イベント一覧</h1>
+    <p class="text-base-content/60">準備の苦労を、綺麗なイベントとして結実させましょう。</p>
+</div>
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <section>
+        <div id="event-list" class="grid gap-4 md:grid-cols-2">
+            {% if events.is_empty() %}
+            <div class="alert alert-info md:col-span-2">
+                <span>まだイベントがありません。右のフォームから作成できます。</span>
+            </div>
+            {% endif %}
+            {% for event in events %}
+                {% include "event_card.html" %}
+            {% endfor %}
+        </div>
+    </section>
+    <aside class="card h-fit bg-base-100 shadow">
+        <div class="card-body">
+            <h2 class="card-title">イベントを作成</h2>
+            <form hx-post="/events" hx-target="#event-list" hx-swap="afterbegin" hx-on::after-request="if(event.detail.successful) this.reset()" class="space-y-3">
+                <label class="form-control">
+                    <div class="label"><span class="label-text">イベント名</span></div>
+                    <input class="input input-bordered" name="title" required>
+                </label>
+                <label class="form-control">
+                    <div class="label"><span class="label-text">開催日時</span></div>
+                    <input class="input input-bordered" type="datetime-local" name="starts_at" required>
+                </label>
+                <label class="form-control">
+                    <div class="label"><span class="label-text">会場</span></div>
+                    <input class="input input-bordered" name="location">
+                </label>
+                <label class="form-control">
+                    <div class="label"><span class="label-text">説明</span></div>
+                    <textarea class="textarea textarea-bordered" name="description"></textarea>
+                </label>
+                <button class="btn btn-primary w-full" type="submit">作成する</button>
+            </form>
+        </div>
+    </aside>
+</div>
+{% endblock %}

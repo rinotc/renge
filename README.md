@@ -14,7 +14,7 @@
 
 ## システム構成
 
-Rust/AxumでHTTPサーバーを動かし、MaudでHTMLを生成します。画面の部分更新にはhtmx、スタイルにはDaisyUIを利用します。イベントと参加者はSeaORMを通じてPostgreSQLに保存されます。
+Rust/AxumでHTTPサーバーを動かし、AskamaでHTMLを生成します。テンプレートは`apps/renge-web/templates`に配置し、画面の部分更新にはhtmx、スタイルにはDaisyUIを利用します。イベントと参加者はSeaORMを通じてPostgreSQLに保存されます。
 
 ## 開発環境の準備
 

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a class="link link-hover mb-5 inline-block" href="/">← イベント一覧へ</a>
+<div class="mb-6 flex flex-col justify-between gap-4 md:flex-row">
+    <div>
+        <h1 class="text-3xl font-bold">{{ event.title }}</h1>
+        <p class="mt-2 text-base-content/70">{{ event.starts_at }} · {{ event.location }}</p>
+        {% if event.has_description %}
+        <p class="mt-3 whitespace-pre-wrap">{{ event.description }}</p>
+        {% endif %}
+    </div>
+    <button class="btn btn-outline btn-error" hx-delete="/events/{{ event.id }}" hx-confirm="このイベントを削除しますか？" hx-on::after-request="if(event.detail.successful) window.location='/'">イベントを削除</button>
+</div>
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <section class="card bg-base-100 shadow">
+        <div class="card-body">
+            <h2 class="card-title">参加者</h2>
+            <div id="participant-list" class="space-y-3">
+                {% if people.is_empty() %}
+                <p class="text-base-content/60">参加者はまだ登録されていません。</p>
+                {% endif %}
+                {% for person in people %}
+                    {% include "participant_row.html" %}
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    <aside class="card h-fit bg-base-100 shadow">
+        <div class="card-body">
+            <h2 class="card-title">参加者を追加</h2>
+            <form hx-post="/events/{{ event.id }}/participants" hx-target="#participant-list" hx-swap="afterbegin" hx-on::after-request="if(event.detail.successful) this.reset()" class="space-y-3">
+                <label class="form-control">
+                    <div class="label"><span class="label-text">氏名</span></div>
+                    <input class="input input-bordered" name="name" required>
+                </label>
+                <label class="form-control">
+                    <div class="label"><span class="label-text">メールアドレス</span></div>
+                    <input class="input input-bordered" type="email" name="email" required>
+                </label>
+                <button class="btn btn-primary w-full" type="submit">追加する</button>
+            </form>
+        </div>
+    </aside>
+</div>
+{% endblock %}

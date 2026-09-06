@@ -8,4 +8,3 @@ pub struct Event {
     pub title: EventTitle,
     pub description: EventDescription,
 }
-

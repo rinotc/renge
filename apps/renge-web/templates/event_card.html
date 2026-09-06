@@ -1,0 +1,13 @@
+<article id="event-{{ event.id }}" class="card bg-base-100 shadow">
+    <div class="card-body">
+        <h2 class="card-title">{{ event.title }}</h2>
+        <p class="text-sm text-base-content/70">{{ event.starts_at }} · {{ event.location }}</p>
+        {% if event.has_description %}
+        <p class="line-clamp-2">{{ event.description }}</p>
+        {% endif %}
+        <div class="card-actions justify-end">
+            <a class="btn btn-outline btn-sm" href="/events/{{ event.id }}">詳細</a>
+            <button class="btn btn-ghost btn-sm text-error" hx-delete="/events/{{ event.id }}" hx-target="#event-{{ event.id }}" hx-swap="outerHTML" hx-confirm="このイベントを削除しますか？">削除</button>
+        </div>
+    </div>
+</article>

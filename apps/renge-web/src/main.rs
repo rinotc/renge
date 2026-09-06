@@ -1,7 +1,7 @@
 mod state;
-mod views;
 
 use crate::state::AppState;
+use askama::Template;
 use axum::{
     Form, Router,
     extract::{Path, State},
@@ -11,7 +11,6 @@ use axum::{
 };
 use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
 use infra_postgres_renge_orm::orm::{events as event, participants as participant};
-use maud::{DOCTYPE, Markup, html};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QueryOrder,
     Set,
@@ -20,7 +19,6 @@ use serde::Deserialize;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
-use crate::views::layout::layout;
 
 #[derive(Deserialize)]
 struct EventForm {
@@ -111,7 +109,7 @@ async fn index(State(s): State<AppState>) -> Result<Html<String>, AppError> {
         .order_by_desc(event::Column::StartsAt)
         .all(&s.dbc)
         .await?;
-    Ok(Html(layout("イベント一覧", event_index(events))))
+    Ok(Html(EventIndexTemplate::new(events).render()?))
 }
 async fn show_event(
     State(s): State<AppState>,
@@ -123,7 +121,7 @@ async fn show_event(
         .order_by_asc(participant::Column::CreatedAt)
         .all(&s.dbc)
         .await?;
-    Ok(Html(layout(&event.title, event_detail(&event, people))))
+    Ok(Html(EventDetailTemplate::new(&event, people).render()?))
 }
 async fn create_event(
     State(s): State<AppState>,
@@ -141,7 +139,7 @@ async fn create_event(
     .insert(&s.dbc)
     .await?;
     Ok(if htmx(&headers) {
-        Html(event_card(&model).into_string()).into_response()
+        Html(EventCardTemplate::new(&model).render()?).into_response()
     } else {
         Redirect::to(&format!("/events/{}", model.id)).into_response()
     })
@@ -176,7 +174,7 @@ async fn create_participant(
     .insert(&s.dbc)
     .await?;
     Ok(if htmx(&headers) {
-        Html(participant_row(id, &model).into_string()).into_response()
+        Html(ParticipantRowTemplate::new(id, &model).render()?).into_response()
     } else {
         Redirect::to(&format!("/events/{id}")).into_response()
     })
@@ -198,7 +196,7 @@ async fn update_attendance(
     active.attendance = Set(value.value().into());
     let model = active.update(&s.dbc).await?;
     Ok(if htmx(&headers) {
-        Html(participant_row(event_id, &model).into_string()).into_response()
+        Html(ParticipantRowTemplate::new(event_id, &model).render()?).into_response()
     } else {
         Redirect::to(&format!("/events/{event_id}")).into_response()
     })
@@ -243,19 +241,6 @@ fn htmx(headers: &HeaderMap) -> bool {
     headers.get("HX-Request").and_then(|h| h.to_str().ok()) == Some("true")
 }
 
-fn event_index(events: Vec<event::Model>) -> Markup {
-    html! { div class="mb-8" { h1 class="text-3xl font-bold" { "イベント一覧" } p class="text-base-content/60" { "準備の苦労を、綺麗なイベントとして結実させましょう。" } } div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]" { section { div id="event-list" class="grid gap-4 md:grid-cols-2" { @if events.is_empty() { div class="alert alert-info md:col-span-2" { span { "まだイベントがありません。右のフォームから作成できます。" } } } @for event in events { (event_card(&event)) } } } aside class="card h-fit bg-base-100 shadow" { div class="card-body" { h2 class="card-title" { "イベントを作成" } form hx-post="/events" hx-target="#event-list" hx-swap="afterbegin" hx-on::after-request="if(event.detail.successful) this.reset()" class="space-y-3" { label class="form-control" { div class="label" { span class="label-text" { "イベント名" } } input class="input input-bordered" name="title" required; } label class="form-control" { div class="label" { span class="label-text" { "開催日時" } } input class="input input-bordered" type="datetime-local" name="starts_at" required; } label class="form-control" { div class="label" { span class="label-text" { "会場" } } input class="input input-bordered" name="location"; } label class="form-control" { div class="label" { span class="label-text" { "説明" } } textarea class="textarea textarea-bordered" name="description" {} } button class="btn btn-primary w-full" type="submit" { "作成する" } } } } } }
-}
-fn event_card(event: &event::Model) -> Markup {
-    html! { article id=(format!("event-{}", event.id)) class="card bg-base-100 shadow" { div class="card-body" { h2 class="card-title" { (event.title) } p class="text-sm text-base-content/70" { (date(event.starts_at)) " · " (event.location.as_deref().unwrap_or("会場未定")) } @if let Some(text) = &event.description { p class="line-clamp-2" { (text) } } div class="card-actions justify-end" { a class="btn btn-outline btn-sm" href=(format!("/events/{}", event.id)) { "詳細" } button class="btn btn-ghost btn-sm text-error" hx-delete=(format!("/events/{}", event.id)) hx-target=(format!("#event-{}", event.id)) hx-swap="outerHTML" hx-confirm="このイベントを削除しますか？" { "削除" } } } } }
-}
-fn event_detail(event: &event::Model, people: Vec<participant::Model>) -> Markup {
-    html! { a class="link link-hover mb-5 inline-block" href="/" { "← イベント一覧へ" } div class="mb-6 flex flex-col justify-between gap-4 md:flex-row" { div { h1 class="text-3xl font-bold" { (event.title) } p class="mt-2 text-base-content/70" { (date(event.starts_at)) " · " (event.location.as_deref().unwrap_or("会場未定")) } @if let Some(text) = &event.description { p class="mt-3 whitespace-pre-wrap" { (text) } } } button class="btn btn-outline btn-error" hx-delete=(format!("/events/{}", event.id)) hx-confirm="このイベントを削除しますか？" hx-on::after-request="if(event.detail.successful) window.location='/'" { "イベントを削除" } } div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]" { section class="card bg-base-100 shadow" { div class="card-body" { h2 class="card-title" { "参加者" } div id="participant-list" class="space-y-3" { @if people.is_empty() { p class="text-base-content/60" { "参加者はまだ登録されていません。" } } @for person in people { (participant_row(event.id, &person)) } } } } aside class="card h-fit bg-base-100 shadow" { div class="card-body" { h2 class="card-title" { "参加者を追加" } form hx-post=(format!("/events/{}/participants", event.id)) hx-target="#participant-list" hx-swap="afterbegin" hx-on::after-request="if(event.detail.successful) this.reset()" class="space-y-3" { label class="form-control" { div class="label" { span class="label-text" { "氏名" } } input class="input input-bordered" name="name" required; } label class="form-control" { div class="label" { span class="label-text" { "メールアドレス" } } input class="input input-bordered" type="email" name="email" required; } button class="btn btn-primary w-full" type="submit" { "追加する" } } } } } }
-}
-fn participant_row(event_id: Uuid, p: &participant::Model) -> Markup {
-    let status = Attendance::parse(&p.attendance).unwrap_or(Attendance::Pending);
-    html! { div id=(format!("participant-{}", p.id)) class="flex flex-col gap-3 rounded-box border border-base-300 p-4 sm:flex-row sm:items-center" { div class="min-w-0 flex-1" { div class="font-semibold" { (p.name) } div class="truncate text-sm text-base-content/60" { (p.email) } } span class=(format!("badge {}", status.class())) { (status.label()) } select class="select select-bordered select-sm" name="attendance" hx-trigger="change" hx-post=(format!("/events/{event_id}/participants/{}/attendance", p.id)) hx-target=(format!("#participant-{}", p.id)) hx-swap="outerHTML" { @for option in [Attendance::Pending, Attendance::Attending, Attendance::Declined] { option value=(option.value()) selected[option == status] { (option.label()) } } } button class="btn btn-ghost btn-sm text-error" hx-delete=(format!("/events/{event_id}/participants/{}", p.id)) hx-target=(format!("#participant-{}", p.id)) hx-swap="outerHTML" hx-confirm="この参加者を削除しますか？" { "削除" } } }
-}
 fn date(value: DateTime<FixedOffset>) -> String {
     value
         .with_timezone(&chrono::Local)
@@ -266,10 +251,16 @@ enum AppError {
     NotFound,
     BadRequest(String),
     Database(DbErr),
+    Template(askama::Error),
 }
 impl From<DbErr> for AppError {
     fn from(e: DbErr) -> Self {
         Self::Database(e)
+    }
+}
+impl From<askama::Error> for AppError {
+    fn from(e: askama::Error) -> Self {
+        Self::Template(e)
     }
 }
 impl IntoResponse for AppError {
@@ -287,11 +278,227 @@ impl IntoResponse for AppError {
                     "データベース処理に失敗しました。".into(),
                 )
             }
+            Self::Template(e) => {
+                tracing::error!(%e, "template rendering error");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "ページの生成に失敗しました。".into(),
+                )
+            }
         };
-        (
-            status,
-            Html(html! { div class="alert alert-error" { span { (message) } } }.into_string()),
-        )
-            .into_response()
+        let body = ErrorTemplate { message }.render().unwrap_or_else(|e| {
+            tracing::error!(%e, "error template rendering error");
+            "<div class=\"alert alert-error\"><span>ページの生成に失敗しました。</span></div>"
+                .to_owned()
+        });
+        (status, Html(body)).into_response()
+    }
+}
+
+#[derive(Template)]
+#[template(path = "event_index.html")]
+struct EventIndexTemplate {
+    page_title: &'static str,
+    events: Vec<EventView>,
+}
+
+impl EventIndexTemplate {
+    fn new(events: Vec<event::Model>) -> Self {
+        Self {
+            page_title: "イベント一覧",
+            events: events.iter().map(EventView::from).collect(),
+        }
+    }
+}
+
+#[derive(Template)]
+#[template(path = "event_detail.html")]
+struct EventDetailTemplate {
+    page_title: String,
+    event_id: Uuid,
+    event: EventView,
+    people: Vec<ParticipantView>,
+    attendance_options: [AttendanceOption; 3],
+}
+
+impl EventDetailTemplate {
+    fn new(event: &event::Model, people: Vec<participant::Model>) -> Self {
+        Self {
+            page_title: event.title.clone(),
+            event_id: event.id,
+            event: EventView::from(event),
+            people: people.iter().map(ParticipantView::from).collect(),
+            attendance_options: attendance_options(),
+        }
+    }
+}
+
+#[derive(Template)]
+#[template(path = "event_card.html")]
+struct EventCardTemplate {
+    event: EventView,
+}
+
+impl EventCardTemplate {
+    fn new(event: &event::Model) -> Self {
+        Self {
+            event: EventView::from(event),
+        }
+    }
+}
+
+#[derive(Template)]
+#[template(path = "participant_row.html")]
+struct ParticipantRowTemplate {
+    event_id: Uuid,
+    person: ParticipantView,
+    attendance_options: [AttendanceOption; 3],
+}
+
+impl ParticipantRowTemplate {
+    fn new(event_id: Uuid, person: &participant::Model) -> Self {
+        Self {
+            event_id,
+            person: ParticipantView::from(person),
+            attendance_options: attendance_options(),
+        }
+    }
+}
+
+#[derive(Template)]
+#[template(path = "error.html")]
+struct ErrorTemplate {
+    message: String,
+}
+
+struct EventView {
+    id: Uuid,
+    title: String,
+    description: String,
+    has_description: bool,
+    starts_at: String,
+    location: String,
+}
+
+impl From<&event::Model> for EventView {
+    fn from(event: &event::Model) -> Self {
+        let description = event.description.clone().unwrap_or_default();
+        Self {
+            id: event.id,
+            title: event.title.clone(),
+            has_description: !description.is_empty(),
+            description,
+            starts_at: date(event.starts_at),
+            location: event
+                .location
+                .clone()
+                .unwrap_or_else(|| "会場未定".to_owned()),
+        }
+    }
+}
+
+struct ParticipantView {
+    id: Uuid,
+    name: String,
+    email: String,
+    status: AttendanceView,
+}
+
+impl From<&participant::Model> for ParticipantView {
+    fn from(person: &participant::Model) -> Self {
+        let status = Attendance::parse(&person.attendance).unwrap_or(Attendance::Pending);
+        Self {
+            id: person.id,
+            name: person.name.clone(),
+            email: person.email.clone(),
+            status: AttendanceView::from(status),
+        }
+    }
+}
+
+struct AttendanceView {
+    value: &'static str,
+    label: &'static str,
+    class: &'static str,
+}
+
+impl From<Attendance> for AttendanceView {
+    fn from(status: Attendance) -> Self {
+        Self {
+            value: status.value(),
+            label: status.label(),
+            class: status.class(),
+        }
+    }
+}
+
+struct AttendanceOption {
+    value: &'static str,
+    label: &'static str,
+}
+
+fn attendance_options() -> [AttendanceOption; 3] {
+    [
+        AttendanceOption {
+            value: Attendance::Pending.value(),
+            label: Attendance::Pending.label(),
+        },
+        AttendanceOption {
+            value: Attendance::Attending.value(),
+            label: Attendance::Attending.label(),
+        },
+        AttendanceOption {
+            value: Attendance::Declined.value(),
+            label: Attendance::Declined.label(),
+        },
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn event_index_renders_empty_state() {
+        let html = EventIndexTemplate::new(Vec::new()).render().unwrap();
+
+        assert!(html.contains("まだイベントがありません。右のフォームから作成できます。"));
+    }
+
+    #[test]
+    fn event_card_escapes_user_input() {
+        let html = EventCardTemplate {
+            event: EventView {
+                id: Uuid::nil(),
+                title: "<script>alert(1)</script>".to_owned(),
+                description: "説明".to_owned(),
+                has_description: true,
+                starts_at: "2026年9月7日 12:00".to_owned(),
+                location: "会場".to_owned(),
+            },
+        }
+        .render()
+        .unwrap();
+
+        assert!(html.contains("&#60;script&#62;alert(1)&#60;/script&#62;"));
+        assert!(!html.contains("<script>alert(1)</script>"));
+    }
+
+    #[test]
+    fn participant_row_selects_current_attendance() {
+        let html = ParticipantRowTemplate {
+            event_id: Uuid::nil(),
+            person: ParticipantView {
+                id: Uuid::nil(),
+                name: "参加者".to_owned(),
+                email: "person@example.com".to_owned(),
+                status: AttendanceView::from(Attendance::Attending),
+            },
+            attendance_options: attendance_options(),
+        }
+        .render()
+        .unwrap();
+
+        assert!(html.contains("value=\"attending\" selected"));
     }
 }

@@ -16,32 +16,50 @@
 
 Rust/AxumでHTTPサーバーを動かし、MaudでHTMLを生成します。画面の部分更新にはhtmx、スタイルにはDaisyUIを利用します。イベントと参加者はSeaORMを通じてPostgreSQLに保存されます。
 
+## 開発環境の準備
+
+Rust、Docker Compose、Task をインストールしてください。
+
+Task のインストール方法は、<https://taskfile.dev/docs/installation> を参照してください。
+macOS で Homebrew を使う場合は、次のコマンドでインストールできます。
+
+```sh
+brew install go-task/tap/go-task
+```
+
 ## 起動方法
 
-1. 環境変数を準備します。
+Taskfile のセットアップタスクで環境変数ファイルを準備します。
 
-   ```sh
-   cp .env.example .env
-   source .env
-   ```
+```sh
+task setup
+```
 
-2. PostgreSQLを起動します。
+アプリを起動するには、次のコマンドを実行します。PostgreSQL の起動と、未適用のマイグレーションも自動で実行されます。
 
-   ```sh
-   docker compose up -d
-   ```
+```sh
+task dev
+```
 
-3. 初回およびスキーマ更新時にマイグレーションを適用します。
+起動後、<http://localhost:3000> を開きます。
 
-   ```sh
-   cargo run -p migration -- up
-   ```
+## Task 一覧
 
-4. アプリを起動し、<http://localhost:3000> を開きます。
+| コマンド | 内容 |
+| --- | --- |
+| `task setup` | `.env.example` から `.env` を作成 |
+| `task db:up` | PostgreSQL を起動 |
+| `task db:down` | PostgreSQL を停止 |
+| `task db:migrate` | 未適用のマイグレーションを適用 |
+| `task db:migrate:down` | 直近のマイグレーションを戻す |
+| `task dev` | DB とマイグレーションを準備してアプリを起動 |
+| `task fmt` | workspace 全体を整形 |
+| `task fmt:check` | format 済みか確認 |
+| `task check` | コンパイルチェック |
+| `task test` | テストを実行 |
+| `task ci` | CI 用の format・check・test |
 
-   ```sh
-   cargo run
-   ```
+Taskfile は `.env` を自動で読み込むため、`source .env` は不要です。
 
 ## コード整形
 
@@ -54,13 +72,13 @@ rustup component add rustfmt
 workspace全体を整形するには、次を実行します。
 
 ```sh
-cargo fmt --all
+task fmt
 ```
 
 整形せずにチェックだけ行う場合は、次を実行します。
 
 ```sh
-cargo fmt --all -- --check
+task fmt:check
 ```
 
 ## サンプルの機能
@@ -72,11 +90,11 @@ cargo fmt --all -- --check
 
 ## マイグレーション
 
-マイグレーションはアプリ起動時には実行されません。明示的に実行してください。
+アプリ本体は起動時にマイグレーションを実行しません。`task dev` ではアプリ起動前に未適用のマイグレーションを適用します。手動で実行する場合は、次のコマンドを使用してください。
 
 ```sh
-cargo run -p migration -- up    # 未適用分を適用
-cargo run -p migration -- down  # 直近の適用を戻す
+task db:migrate       # 未適用分を適用
+task db:migrate:down  # 直近の適用を戻す
 ```
 
 新しいマイグレーションは `migration/src` にSeaORM Migrationの実装として追加し、`migration/src/lib.rs` の `Migrator::migrations` に登録します。

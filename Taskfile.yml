@@ -1,0 +1,73 @@
+version: '3'
+
+tasks:
+  setup:
+    desc: 開発用の .env を作成する
+    status:
+      - test -f .env
+    cmds:
+      - cp .env.example .env
+
+  check:env:
+    desc: .env の存在を確認する
+    preconditions:
+      - sh: test -f .env
+        msg: '.env がありません。先に `task setup` を実行してください。'
+
+  db:up:
+    desc: PostgreSQL を起動し、利用可能になるまで待つ
+    cmds:
+      - docker compose up -d --wait
+
+  db:down:
+    desc: PostgreSQL を停止する
+    cmds:
+      - docker compose down
+
+  db:migrate:
+    desc: 未適用のマイグレーションを適用する
+    deps: [check:env, db:up]
+    dotenv: ['.env']
+    cmds:
+      - cargo run -p migration -- up
+
+  db:migrate:down:
+    desc: 直近のマイグレーションを戻す
+    deps: [check:env, db:up]
+    dotenv: ['.env']
+    cmds:
+      - cargo run -p migration -- down
+
+  dev:
+    desc: PostgreSQL とマイグレーションを準備してアプリを起動する
+    deps: [db:migrate]
+    dotenv: ['.env']
+    cmds:
+      - cargo run
+
+  fmt:
+    desc: workspace 全体を整形する
+    cmds:
+      - cargo fmt --all
+
+  fmt:check:
+    desc: format 済みか確認する
+    cmds:
+      - cargo fmt --all -- --check
+
+  check:
+    desc: コンパイルチェックを実行する
+    cmds:
+      - cargo check
+
+  test:
+    desc: テストを実行する
+    cmds:
+      - cargo test
+
+  ci:
+    desc: CI 用の format・check・test を実行する
+    cmds:
+      - task: fmt:check
+      - task: check
+      - task: test

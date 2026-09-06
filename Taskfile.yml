@@ -43,7 +43,7 @@ tasks:
     deps: [db:migrate]
     dotenv: ['.env']
     cmds:
-      - cargo run
+      - cargo run -p renge-web
 
   fmt:
     desc: workspace 全体を整形する

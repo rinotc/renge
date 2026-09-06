@@ -1,12 +1,18 @@
-[package]
-name = "renge"
-version = "0.1.0"
-edition = "2024"
-
 [workspace]
-members = ["migration"]
+resolver = "3"
+members = [
+    "apps/renge-web",
+    "domains/account",
+    "migration"
+]
 
-[dependencies]
+[workspace.dependencies]
+# プロダクトクレート
+apps-renge-web = { path = "apps/renge-web" }
+domains-account = { path = "domains/account" }
+
+
+# 依存
 axum = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
 maud = { version = "0.27", features = ["axum"] }

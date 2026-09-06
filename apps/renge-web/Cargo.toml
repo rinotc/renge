@@ -4,8 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# project crate
+infra-postgres-renge-orm = { workspace = true }
+
+# external crate
 axum = { workspace = true }
 chrono = { workspace = true }
+
 maud = { workspace = true }
 sea-orm = { workspace = true }
 serde = { workspace = true }

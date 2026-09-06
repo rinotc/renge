@@ -1,4 +1,3 @@
-mod entities;
 pub mod state;
 
 use crate::state::AppState;
@@ -9,12 +8,12 @@ use axum::{
     response::{Html, IntoResponse, Redirect, Response},
     routing::{get, post},
 };
-use chrono::{DateTime, NaiveDateTime, Utc};
-use entities::{event, participant};
+use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
+use infra_postgres_renge_orm::orm::{events as event, participants as participant};
 use maud::{DOCTYPE, Markup, html};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter,
-    QueryOrder, Set,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QueryOrder,
+    Set,
 };
 use serde::Deserialize;
 use tower_http::trace::TraceLayer;
@@ -135,7 +134,7 @@ async fn create_event(
         description: Set(optional(&f.description)),
         starts_at: Set(parse_datetime(&f.starts_at)?),
         location: Set(optional(&f.location)),
-        created_at: Set(Utc::now()),
+        created_at: Set(Utc::now().fixed_offset()),
     }
     .insert(&s.dbc)
     .await?;
@@ -170,7 +169,7 @@ async fn create_participant(
         name: Set(required(&f.name, "氏名")?.into()),
         email: Set(required(&f.email, "メールアドレス")?.into()),
         attendance: Set("pending".into()),
-        created_at: Set(Utc::now()),
+        created_at: Set(Utc::now().fixed_offset()),
     }
     .insert(&s.dbc)
     .await?;
@@ -233,9 +232,9 @@ fn required<'a>(v: &'a str, name: &str) -> Result<&'a str, AppError> {
 fn optional(v: &str) -> Option<String> {
     (!v.trim().is_empty()).then(|| v.trim().into())
 }
-fn parse_datetime(v: &str) -> Result<DateTime<Utc>, AppError> {
+fn parse_datetime(v: &str) -> Result<DateTime<FixedOffset>, AppError> {
     NaiveDateTime::parse_from_str(v, "%Y-%m-%dT%H:%M")
-        .map(|d| d.and_utc())
+        .map(|d| d.and_utc().fixed_offset())
         .map_err(|_| AppError::BadRequest("開催日時を入力してください。".into()))
 }
 fn htmx(headers: &HeaderMap) -> bool {
@@ -258,7 +257,7 @@ fn participant_row(event_id: Uuid, p: &participant::Model) -> Markup {
     let status = Attendance::parse(&p.attendance).unwrap_or(Attendance::Pending);
     html! { div id=(format!("participant-{}", p.id)) class="flex flex-col gap-3 rounded-box border border-base-300 p-4 sm:flex-row sm:items-center" { div class="min-w-0 flex-1" { div class="font-semibold" { (p.name) } div class="truncate text-sm text-base-content/60" { (p.email) } } span class=(format!("badge {}", status.class())) { (status.label()) } select class="select select-bordered select-sm" name="attendance" hx-trigger="change" hx-post=(format!("/events/{event_id}/participants/{}/attendance", p.id)) hx-target=(format!("#participant-{}", p.id)) hx-swap="outerHTML" { @for option in [Attendance::Pending, Attendance::Attending, Attendance::Declined] { option value=(option.value()) selected[option == status] { (option.label()) } } } button class="btn btn-ghost btn-sm text-error" hx-delete=(format!("/events/{event_id}/participants/{}", p.id)) hx-target=(format!("#participant-{}", p.id)) hx-swap="outerHTML" hx-confirm="この参加者を削除しますか？" { "削除" } } }
 }
-fn date(value: DateTime<Utc>) -> String {
+fn date(value: DateTime<FixedOffset>) -> String {
     value
         .with_timezone(&chrono::Local)
         .format("%Y年%-m月%-d日 %-H:%M")

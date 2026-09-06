@@ -38,6 +38,13 @@ tasks:
     cmds:
       - cargo run -p migration -- down
 
+  db:generate-entity:
+    desc: PostgreSQL のスキーマから SeaORM Entity を生成する
+    deps: [db:migrate]
+    dotenv: ['.env']
+    cmds:
+      - sea-orm-cli generate entity --database-url "$DATABASE_URL" --output-dir infra/postgres/renge-orm/src/orm --with-serde both
+
   dev:
     desc: PostgreSQL とマイグレーションを準備してアプリを起動する
     deps: [db:migrate]

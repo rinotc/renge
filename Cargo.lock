@@ -1040,6 +1040,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "infra-postgres-renge-orm"
+version = "0.1.0"
+dependencies = [
+ "sea-orm",
+ "serde",
+]
+
+[[package]]
 name = "inherent"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1646,6 +1654,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "chrono",
+ "infra-postgres-renge-orm",
  "maud",
  "sea-orm",
  "serde",

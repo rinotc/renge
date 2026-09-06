@@ -3,14 +3,15 @@ resolver = "3"
 members = [
     "apps/renge-web",
     "domains/account",
-    "migration"
+    "infra/postgres/renge-orm",
+    "infra/postgres/migration"
 ]
 
 [workspace.dependencies]
 # プロダクトクレート
 apps-renge-web = { path = "apps/renge-web" }
 domains-account = { path = "domains/account" }
-
+infra-postgres-renge-orm = { path = "infra/postgres/renge-orm" }
 
 # 依存
 axum = "0.8"

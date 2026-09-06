@@ -43,6 +43,26 @@ Rust/AxumでHTTPサーバーを動かし、MaudでHTMLを生成します。画�
    cargo run
    ```
 
+## コード整形
+
+Rust標準の`rustfmt`を使用します。未導入の場合は、次のコマンドで追加してください。
+
+```sh
+rustup component add rustfmt
+```
+
+workspace全体を整形するには、次を実行します。
+
+```sh
+cargo fmt --all
+```
+
+整形せずにチェックだけ行う場合は、次を実行します。
+
+```sh
+cargo fmt --all -- --check
+```
+
 ## サンプルの機能
 
 - イベントの作成・一覧表示・詳細表示・削除
@@ -60,4 +80,3 @@ cargo run -p migration -- down  # 直近の適用を戻す
 ```
 
 新しいマイグレーションは `migration/src` にSeaORM Migrationの実装として追加し、`migration/src/lib.rs` の `Migrator::migrations` に登録します。
-

@@ -296,7 +296,7 @@ impl IntoResponse for AppError {
 }
 
 #[derive(Template)]
-#[template(path = "event_index.html")]
+#[template(path = "event_index.askama.html")]
 struct EventIndexTemplate {
     page_title: &'static str,
     events: Vec<EventView>,
@@ -312,7 +312,7 @@ impl EventIndexTemplate {
 }
 
 #[derive(Template)]
-#[template(path = "event_detail.html")]
+#[template(path = "event_detail.askama.html")]
 struct EventDetailTemplate {
     page_title: String,
     event_id: Uuid,
@@ -334,7 +334,7 @@ impl EventDetailTemplate {
 }
 
 #[derive(Template)]
-#[template(path = "event_card.html")]
+#[template(path = "event_card.askama.html")]
 struct EventCardTemplate {
     event: EventView,
 }
@@ -348,7 +348,7 @@ impl EventCardTemplate {
 }
 
 #[derive(Template)]
-#[template(path = "participant_row.html")]
+#[template(path = "participant_row.askama.html")]
 struct ParticipantRowTemplate {
     event_id: Uuid,
     person: ParticipantView,
@@ -366,7 +366,7 @@ impl ParticipantRowTemplate {
 }
 
 #[derive(Template)]
-#[template(path = "error.html")]
+#[template(path = "error.askama.html")]
 struct ErrorTemplate {
     message: String,
 }

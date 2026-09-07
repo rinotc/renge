@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.askama.html" %}
 
 {% block content %}
 <div class="mb-8">
@@ -14,7 +14,7 @@
             </div>
             {% endif %}
             {% for event in events %}
-                {% include "event_card.html" %}
+                {% include "event_card.askama.html" %}
             {% endfor %}
         </div>
     </section>

@@ -1,15 +1,24 @@
-[package]
-name = "renge"
-version = "0.1.0"
-edition = "2024"
-
 [workspace]
-members = ["migration"]
+resolver = "3"
+members = [
+    "apps/renge-web",
+    "domains/account",
+    "domains/event",
+    "infra/postgres/renge-orm",
+    "infra/postgres/migration"
+]
 
-[dependencies]
+[workspace.dependencies]
+# プロダクトクレート
+apps-renge-web = { path = "apps/renge-web" }
+domains-account = { path = "domains/account" }
+domains-event = { path = "domains/event" }
+infra-postgres-renge-orm = { path = "infra/postgres/renge-orm" }
+
+# 依存
 axum = "0.8"
+askama = "0.14"
 chrono = { version = "0.4", features = ["serde"] }
-maud = { version = "0.27", features = ["axum"] }
 sea-orm = { version = "1.1", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono", "with-uuid"] }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }

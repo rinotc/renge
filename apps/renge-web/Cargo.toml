@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 # project crate
 infra-postgres-renge-orm = { workspace = true }
+libs-usecase = { workspace = true }
 
 # external crate
 axum = { workspace = true }

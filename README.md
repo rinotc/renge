@@ -108,7 +108,7 @@ task db:migrate:down  # 直近の適用を戻す
 cargo install sea-orm-cli --version 1.1.20
 ```
 
-PostgreSQL を起動してマイグレーションを適用した後、DB スキーマから Entity を生成します。生成された `events.rs` / `participants.rs` などのファイルは `infra/postgres/renge-orm/src/orm` に保存され、Git で管理します。
+PostgreSQL を起動してマイグレーションを適用した後、DB スキーマから Entity を生成します。生成された `event_handlers` / `participant_handlers` などのファイルは `infra/postgres/renge-orm/src/orm` に保存され、Git で管理します。
 
 ```sh
 task db:generate-entity

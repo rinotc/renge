@@ -1,5 +1,5 @@
 use crate::{
-    handlers::{events, participants},
+    handlers::{event_handlers, participant_handlers},
     state::AppState,
 };
 use axum::{
@@ -10,23 +10,23 @@ use tower_http::trace::TraceLayer;
 
 pub(crate) fn router(state: AppState) -> Router {
     Router::new()
-        .route("/", get(events::index))
-        .route("/events", post(events::create_event))
+        .route("/", get(event_handlers::index))
+        .route("/events", post(event_handlers::create_event))
         .route(
             "/events/{id}",
-            get(events::show_event).delete(events::delete_event),
+            get(event_handlers::show_event).delete(event_handlers::delete_event),
         )
         .route(
             "/events/{id}/participants",
-            post(participants::create_participant),
+            post(participant_handlers::create_participant),
         )
         .route(
             "/events/{id}/participants/{participant_id}/attendance",
-            post(participants::update_attendance),
+            post(participant_handlers::update_attendance),
         )
         .route(
             "/events/{id}/participants/{participant_id}",
-            delete(participants::delete_participant),
+            delete(participant_handlers::delete_participant),
         )
         .with_state(state)
         .layer(TraceLayer::new_for_http())

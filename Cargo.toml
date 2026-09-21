@@ -5,7 +5,8 @@ members = [
     "domains/account",
     "domains/event",
     "infra/postgres/renge-orm",
-    "infra/postgres/migration"
+    "infra/postgres/migration",
+    "libs/usecase"
 ]
 
 [workspace.dependencies]
@@ -14,6 +15,8 @@ apps-renge-web = { path = "apps/renge-web" }
 domains-account = { path = "domains/account" }
 domains-event = { path = "domains/event" }
 infra-postgres-renge-orm = { path = "infra/postgres/renge-orm" }
+infra-postgres-migration = { path = "infra/postgres/migration" }
+libs-usecase = { path = "libs/usecase" }
 
 # 依存
 axum = "0.8"

@@ -3,6 +3,7 @@ mod error;
 mod handlers;
 mod state;
 mod views;
+pub mod usecase;
 
 use crate::state::AppState;
 use tracing_subscriber::EnvFilter;

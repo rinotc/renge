@@ -1,5 +1,5 @@
-pub(crate) mod events;
-pub(crate) mod participants;
+pub(crate) mod event_handlers;
+pub(crate) mod participant_handlers;
 
 use axum::http::HeaderMap;
 use chrono::{DateTime, FixedOffset, NaiveDateTime};

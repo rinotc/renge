@@ -1,6 +1,6 @@
 use crate::{
     error::AppError,
-    handlers::{events::find_event, is_htmx, required},
+    handlers::{event_handlers::find_event, is_htmx, required},
     state::AppState,
     views::{Attendance, ParticipantRowTemplate},
 };

@@ -6,8 +6,10 @@ members = [
     "domains/event",
     "infra/postgres/renge-orm",
     "infra/postgres/migration",
-    "libs/usecase"
-]
+    "libs/usecase",
+    "libs/paging",
+    "libs/clock"
+    , "libs/modeling"]
 
 [workspace.dependencies]
 # プロダクトクレート
@@ -17,6 +19,9 @@ domains-event = { path = "domains/event" }
 infra-postgres-renge-orm = { path = "infra/postgres/renge-orm" }
 infra-postgres-migration = { path = "infra/postgres/migration" }
 libs-usecase = { path = "libs/usecase" }
+libs-paging = { path = "libs/paging" }
+libs-clock = { path = "libs/clock" }
+libs-modeling = { path = "libs/modeling" }
 
 # 依存
 axum = "0.8"
@@ -28,4 +33,4 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
 tower-http = { version = "0.6", features = ["trace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-uuid = { version = "1", features = ["v4", "serde"] }
+uuid = { version = "1", features = ["v4", "v7", "serde"] }

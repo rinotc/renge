@@ -1,0 +1,9 @@
+[package]
+name = "libs-modeling"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+libs-clock = { workspace = true }
+
+uuid = { workspace = true }

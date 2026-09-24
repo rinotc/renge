@@ -574,16 +574,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "domain-account"
+name = "domains-account"
 version = "0.1.0"
 dependencies = [
  "uuid",
 ]
 
 [[package]]
-name = "domain-event"
+name = "domains-event"
 version = "0.1.0"
 dependencies = [
+ "chrono",
+ "libs-clock",
+ "libs-modeling",
+ "libs-paging",
  "uuid",
 ]
 
@@ -1173,6 +1177,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "libs-clock"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "uuid",
+]
+
+[[package]]
+name = "libs-modeling"
+version = "0.1.0"
+dependencies = [
+ "libs-clock",
+ "uuid",
+]
+
+[[package]]
+name = "libs-paging"
+version = "0.1.0"
+
+[[package]]
 name = "libs-usecase"
 version = "0.1.0"
 
@@ -1693,7 +1717,9 @@ dependencies = [
  "askama",
  "axum",
  "chrono",
+ "domains-event",
  "infra-postgres-renge-orm",
+ "libs-modeling",
  "libs-usecase",
  "sea-orm",
  "serde",

@@ -1,5 +1,5 @@
 [package]
-name = "domain-event"
+name = "domains-event"
 version = "0.1.0"
 edition = "2024"
 
@@ -7,4 +7,9 @@ edition = "2024"
 path = "src/lib.rs"
 
 [dependencies]
+libs-paging = { workspace = true }
+libs-clock = { workspace = true }
+libs-modeling = { workspace = true}
+
 uuid = { workspace = true }
+chrono = { workspace = true }

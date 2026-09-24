@@ -1,10 +1,8 @@
 [package]
-name = "domains-account"
+name = "libs-clock"
 version = "0.1.0"
 edition = "2024"
 
-[lib]
-path = "src/lib.rs"
-
 [dependencies]
+chrono = { workspace = true }
 uuid = { workspace = true }

@@ -1,4 +1,9 @@
-use crate::presenters::event::create_event_presenter::CreateEventPresenterError;
+use crate::presenters::event::{
+    create_event_presenter::CreateEventPresenterError,
+    delete_event_presenter::DeleteEventPresenterError,
+    index_events_presenter::IndexEventsPresenterError,
+    show_event_presenter::ShowEventPresenterError,
+};
 use crate::views::ErrorTemplate;
 use askama::Template;
 use axum::{
@@ -33,6 +38,34 @@ impl From<CreateEventPresenterError> for AppError {
         match error {
             CreateEventPresenterError::BadRequest(message) => Self::BadRequest(message),
             CreateEventPresenterError::UseCase(error) => Self::UseCase(error),
+        }
+    }
+}
+
+impl From<IndexEventsPresenterError> for AppError {
+    fn from(error: IndexEventsPresenterError) -> Self {
+        match error {
+            IndexEventsPresenterError::BadRequest => {
+                Self::BadRequest("ページ番号は1以上の整数で入力してください。".into())
+            }
+            IndexEventsPresenterError::UseCase(error) => Self::UseCase(error),
+        }
+    }
+}
+
+impl From<ShowEventPresenterError> for AppError {
+    fn from(error: ShowEventPresenterError) -> Self {
+        match error {
+            ShowEventPresenterError::NotFound => Self::NotFound,
+            ShowEventPresenterError::UseCase(error) => Self::UseCase(error),
+        }
+    }
+}
+
+impl From<DeleteEventPresenterError> for AppError {
+    fn from(error: DeleteEventPresenterError) -> Self {
+        match error {
+            DeleteEventPresenterError::UseCase(error) => Self::UseCase(error),
         }
     }
 }

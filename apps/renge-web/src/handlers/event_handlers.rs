@@ -1,42 +1,38 @@
 use crate::{
     error::AppError,
     handlers::is_htmx,
-    presenters::event::create_event_presenter::CreateEventRequest,
+    presenters::event::{
+        create_event_presenter::CreateEventRequest, index_events_presenter::EventIndexRequest,
+    },
     state::AppState,
-    views::{EventDetailTemplate, EventIndexTemplate},
 };
 use askama::Template;
 use axum::{
     Form,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{HeaderMap, StatusCode},
     response::{Html, IntoResponse, Redirect, Response},
 };
-use infra_postgres_renge_orm::orm::{events as event, participants as participant};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
+use infra_postgres_renge_orm::orm::events as event;
+use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
-pub(crate) async fn index(State(state): State<AppState>) -> Result<Html<String>, AppError> {
-    let events = event::Entity::find()
-        .order_by_desc(event::Column::StartsAt)
-        .all(&state.dbc)
-        .await?;
+pub(crate) async fn index(
+    State(state): State<AppState>,
+    Query(request): Query<EventIndexRequest>,
+) -> Result<Html<String>, AppError> {
+    let presentation = state.index_events_presenter.present(request).await?;
 
-    Ok(Html(EventIndexTemplate::new(events).render()?))
+    Ok(Html(presentation.template.render()?))
 }
 
 pub(crate) async fn show_event(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<Html<String>, AppError> {
-    let event = find_event(&state.dbc, id).await?;
-    let people = participant::Entity::find()
-        .filter(participant::Column::EventId.eq(id))
-        .order_by_asc(participant::Column::CreatedAt)
-        .all(&state.dbc)
-        .await?;
+    let presentation = state.show_event_presenter.present(id).await?;
 
-    Ok(Html(EventDetailTemplate::new(&event, people).render()?))
+    Ok(Html(presentation.template.render()?))
 }
 
 pub(crate) async fn create_event(
@@ -58,7 +54,7 @@ pub(crate) async fn delete_event(
     headers: HeaderMap,
     Path(id): Path<Uuid>,
 ) -> Result<Response, AppError> {
-    event::Entity::delete_by_id(id).exec(&state.dbc).await?;
+    state.delete_event_presenter.present(id).await?;
 
     Ok(if is_htmx(&headers) {
         StatusCode::NO_CONTENT.into_response()

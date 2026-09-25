@@ -17,6 +17,15 @@
                 {% include "event_card.askama.html" %}
             {% endfor %}
         </div>
+        <nav class="mt-6 flex items-center justify-center gap-4" aria-label="ページ移動">
+            {% if has_previous %}
+            <a class="btn btn-outline" href="/?page={{ previous_page }}">前へ</a>
+            {% endif %}
+            <span>ページ {{ current_page }}</span>
+            {% if has_next %}
+            <a class="btn btn-outline" href="/?page={{ next_page }}">次へ</a>
+            {% endif %}
+        </nav>
     </section>
     <aside class="card h-fit bg-base-100 shadow">
         <div class="card-body">

@@ -1741,6 +1741,7 @@ dependencies = [
  "infra-postgres-renge-orm",
  "libs-clock",
  "libs-modeling",
+ "libs-paging",
  "libs-usecase",
  "sea-orm",
  "serde",

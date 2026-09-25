@@ -1,7 +1,8 @@
 use askama::Template;
 use chrono::{DateTime, FixedOffset};
 use domains_event::event::Event as DomainEvent;
-use infra_postgres_renge_orm::orm::{events as event, participants as participant};
+use domains_event::event::participant::Participant as DomainParticipant;
+use infra_postgres_renge_orm::orm::participants as participant;
 use uuid::Uuid;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -51,13 +52,28 @@ impl Attendance {
 pub(crate) struct EventIndexTemplate {
     page_title: &'static str,
     events: Vec<EventView>,
+    current_page: u32,
+    has_previous: bool,
+    previous_page: u32,
+    has_next: bool,
+    next_page: u32,
 }
 
 impl EventIndexTemplate {
-    pub(crate) fn new(events: Vec<event::Model>) -> Self {
+    pub(crate) fn new(
+        events: Vec<DomainEvent>,
+        current_page: u32,
+        has_previous: bool,
+        has_next: bool,
+    ) -> Self {
         Self {
             page_title: "イベント一覧",
             events: events.iter().map(EventView::from).collect(),
+            current_page,
+            has_previous,
+            previous_page: current_page.saturating_sub(1),
+            has_next,
+            next_page: current_page.saturating_add(1),
         }
     }
 }
@@ -73,10 +89,10 @@ pub(crate) struct EventDetailTemplate {
 }
 
 impl EventDetailTemplate {
-    pub(crate) fn new(event: &event::Model, people: Vec<participant::Model>) -> Self {
+    pub(crate) fn new(event: &DomainEvent, people: Vec<DomainParticipant>) -> Self {
         Self {
-            page_title: event.title.clone(),
-            event_id: event.id,
+            page_title: event.title.as_str().to_owned(),
+            event_id: event.id.value(),
             event: EventView::from(event),
             people: people.iter().map(ParticipantView::from).collect(),
             attendance_options: attendance_options(),
@@ -131,23 +147,6 @@ struct EventView {
     location: String,
 }
 
-impl From<&event::Model> for EventView {
-    fn from(event: &event::Model) -> Self {
-        let description = event.description.clone().unwrap_or_default();
-        Self {
-            id: event.id,
-            title: event.title.clone(),
-            has_description: !description.is_empty(),
-            description,
-            starts_at: date(event.starts_at),
-            location: event
-                .location
-                .clone()
-                .unwrap_or_else(|| "会場未定".to_owned()),
-        }
-    }
-}
-
 impl From<&DomainEvent> for EventView {
     fn from(event: &DomainEvent) -> Self {
         let description = event
@@ -179,6 +178,18 @@ struct ParticipantView {
 
 impl From<&participant::Model> for ParticipantView {
     fn from(person: &participant::Model) -> Self {
+        let status = Attendance::parse(&person.attendance).unwrap_or(Attendance::Pending);
+        Self {
+            id: person.id,
+            name: person.name.clone(),
+            email: person.email.clone(),
+            status: AttendanceView::from(status),
+        }
+    }
+}
+
+impl From<&DomainParticipant> for ParticipantView {
+    fn from(person: &DomainParticipant) -> Self {
         let status = Attendance::parse(&person.attendance).unwrap_or(Attendance::Pending);
         Self {
             id: person.id,
@@ -240,7 +251,9 @@ mod tests {
 
     #[test]
     fn event_index_renders_empty_state() {
-        let html = EventIndexTemplate::new(Vec::new()).render().unwrap();
+        let html = EventIndexTemplate::new(Vec::new(), 1, false, false)
+            .render()
+            .unwrap();
 
         assert!(html.contains("まだイベントがありません。右のフォームから作成できます。"));
     }

@@ -6,7 +6,8 @@ use axum::{
     Router,
     routing::{delete, get, post},
 };
-use tower_http::trace::TraceLayer;
+use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
+use tracing::Level;
 
 pub(crate) fn router(state: AppState) -> Router {
     Router::new()
@@ -29,5 +30,10 @@ pub(crate) fn router(state: AppState) -> Router {
             delete(participant_handlers::delete_participant),
         )
         .with_state(state)
-        .layer(TraceLayer::new_for_http())
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
+                .on_request(DefaultOnRequest::new().level(Level::INFO))
+                .on_response(DefaultOnResponse::new().level(Level::INFO)),
+        )
 }

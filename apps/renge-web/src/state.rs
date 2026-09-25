@@ -12,9 +12,8 @@ use adapters_event::{
     event::postgres_event_repository::PostgresEventRepository,
     participant::postgres_participant_repository::PostgresParticipantRepository,
 };
-use domains_event::event::{
-    event_repository::EventRepository, participant_repository::ParticipantRepository,
-};
+use domains_event::event::event_repository::EventRepository;
+use domains_event::participant::ParticipantRepository;
 use libs_clock::clock::{Clock, SystemClock};
 use libs_modeling::id_provider::{IdProvider, UuidIdProvider};
 use sea_orm::{Database, DatabaseConnection, DbErr};

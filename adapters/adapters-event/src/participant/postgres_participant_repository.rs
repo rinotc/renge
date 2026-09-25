@@ -1,8 +1,7 @@
 use async_trait::async_trait;
 use domains_event::event::event_id::EventId;
 use domains_event::event::event_repository::RepositoryError;
-use domains_event::event::participant::Participant;
-use domains_event::event::participant_repository::ParticipantRepository;
+use domains_event::participant::{Participant, ParticipantRepository};
 use infra_postgres_renge_orm::orm::participants;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
 use std::error::Error;

@@ -7,7 +7,7 @@ use libs_modeling::id_provider::IdProvider;
 use libs_modeling::identifier::Identifier;
 use uuid::Uuid;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct Event {
     pub id: EventId,
     pub title: EventTitle,
@@ -15,6 +15,14 @@ pub struct Event {
     pub start_at: DateTime<FixedOffset>,
     pub location: Option<EventLocation>,
 }
+
+impl PartialEq for Event {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for Event {}
 
 impl Event {
     pub fn create(

@@ -1,7 +1,7 @@
 use askama::Template;
 use chrono::{DateTime, FixedOffset};
 use domains_event::event::Event as DomainEvent;
-use domains_event::event::participant::Participant as DomainParticipant;
+use domains_event::participant::Participant as DomainParticipant;
 use infra_postgres_renge_orm::orm::participants as participant;
 use uuid::Uuid;
 

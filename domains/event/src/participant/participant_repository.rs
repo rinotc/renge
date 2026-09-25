@@ -1,6 +1,6 @@
 use crate::event::event_id::EventId;
 use crate::event::event_repository::RepositoryError;
-use crate::event::participant::Participant;
+use crate::participant::Participant;
 use async_trait::async_trait;
 
 #[async_trait]

@@ -43,6 +43,17 @@ task dev
 
 起動後、<http://localhost:3000> を開きます。
 
+## ログ
+
+HTTPリクエストの受信時と完了時に、`request_id`、送信元IP、HTTPメソッド、パス、Host、User-Agent、レスポンスステータス、処理時間を出力します。`request_id` はUUIDとして生成され、レスポンスの `X-Request-Id` ヘッダーにも返します。クエリ文字列、Cookie、認証ヘッダー、リクエスト本文、レスポンス本文は出力しません。
+
+| 環境変数 | 既定値 | 内容 |
+| --- | --- | --- |
+| `LOG_FORMAT` | `pretty` | 開発向けの可読形式は `pretty`、ログ収集基盤向けのJSON形式は `json` |
+| `TRUST_PROXY_HEADERS` | `false` | `true` の場合、`X-Forwarded-For` の先頭IPを送信元IPとして使用 |
+
+運用環境では `LOG_FORMAT=json` を設定してください。CaddyまたはNginxを前段に置く場合は、アプリケーションへの直接アクセスを禁止し、プロキシが `X-Forwarded-For` をクライアントIPで上書きする構成にしたうえで、`TRUST_PROXY_HEADERS=true` を設定してください。
+
 ## Task 一覧
 
 | コマンド | 内容 |

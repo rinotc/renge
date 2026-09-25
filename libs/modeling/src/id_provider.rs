@@ -1,5 +1,8 @@
 use libs_clock::clock::Clock;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use uuid::{ContextV7, Timestamp, Uuid};
 
 pub trait IdProvider<ID>: Send + Sync {
@@ -7,11 +10,11 @@ pub trait IdProvider<ID>: Send + Sync {
 }
 
 pub struct UuidIdProvider {
-    clock: Box<dyn Clock>,
+    clock: Arc<dyn Clock>,
 }
 
 impl UuidIdProvider {
-    pub fn new(clock: Box<dyn Clock>) -> Self {
+    pub fn new(clock: Arc<dyn Clock>) -> Self {
         Self { clock }
     }
 }

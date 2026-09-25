@@ -3,12 +3,14 @@ use crate::{
     usecase::event::create_event_usecase::CreateEventUseCase,
 };
 use adapters_event::event::postgres_event_repository::PostgresEventRepository;
-use libs_clock::clock::SystemClock;
-use libs_modeling::id_provider::UuidIdProvider;
+use domains_event::event::event_repository::EventRepository;
+use libs_clock::clock::{Clock, SystemClock};
+use libs_modeling::id_provider::{IdProvider, UuidIdProvider};
 use sea_orm::{Database, DatabaseConnection, DbErr};
 use std::error::Error;
 use std::sync::Arc;
 use std::{env, fmt};
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -23,15 +25,17 @@ impl AppState {
         let dbc = Database::connect(database_url)
             .await
             .map_err(|e| AppStateError::DatabaseConnectionError(e))?;
-        let event_repository = PostgresEventRepository::new(dbc.clone());
-        let create_event_use_case = CreateEventUseCase::new(
-            Box::new(UuidIdProvider::new(Box::new(SystemClock::new()))),
-            Box::new(event_repository),
-        );
+
+        let clock: Arc<dyn Clock> = Arc::new(SystemClock::new());
+        let id_provider: Arc<dyn IdProvider<Uuid>> = Arc::new(UuidIdProvider::new(clock.clone()));
+        let event_repository: Arc<dyn EventRepository> =
+            Arc::new(PostgresEventRepository::new(dbc.clone()));
+        let create_event_usecase =
+            CreateEventUseCase::new(id_provider.clone(), event_repository.clone());
 
         Ok(Self {
             dbc,
-            create_event_presenter: Arc::new(CreateEventPresenter::new(create_event_use_case)),
+            create_event_presenter: Arc::new(CreateEventPresenter::new(create_event_usecase)),
         })
     }
 }

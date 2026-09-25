@@ -8,17 +8,18 @@ use domains_event::event::event_repository::{EventRepository, RepositoryError};
 use domains_event::event::event_title::EventTitle;
 use libs_modeling::id_provider::IdProvider;
 use libs_usecase::usecase::usecase::UseCase;
+use std::sync::Arc;
 use uuid::Uuid;
 
 pub struct CreateEventUseCase {
-    id_provider: Box<dyn IdProvider<Uuid>>,
-    event_repository: Box<dyn EventRepository>,
+    id_provider: Arc<dyn IdProvider<Uuid>>,
+    event_repository: Arc<dyn EventRepository>,
 }
 
 impl CreateEventUseCase {
     pub fn new(
-        id_provider: Box<dyn IdProvider<Uuid>>,
-        event_repository: Box<dyn EventRepository>,
+        id_provider: Arc<dyn IdProvider<Uuid>>,
+        event_repository: Arc<dyn EventRepository>,
     ) -> Self {
         Self {
             id_provider,

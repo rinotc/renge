@@ -6,7 +6,9 @@ edition = "2024"
 [dependencies]
 # project crate
 infra-postgres-renge-orm = { workspace = true }
+adapters-event = { workspace = true }
 libs-usecase = { workspace = true }
+libs-clock = { workspace = true }
 libs-modeling = { workspace = true }
 domains-event = { workspace = true }
 

@@ -7,7 +7,7 @@ use libs_modeling::id_provider::IdProvider;
 use libs_modeling::identifier::Identifier;
 use uuid::Uuid;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Event {
     pub id: EventId,
     pub title: EventTitle,
@@ -20,16 +20,16 @@ impl Event {
     pub fn create(
         uuid_provider: &dyn IdProvider<Uuid>,
         title: EventTitle,
-        description: EventDescription,
+        description: Option<EventDescription>,
         start_at: DateTime<FixedOffset>,
-        location: EventLocation,
+        location: Option<EventLocation>,
     ) -> Self {
         Self {
             id: EventId::generate(uuid_provider),
             title,
-            description: Some(description),
+            description,
             start_at,
-            location: Some(location),
+            location,
         }
     }
 

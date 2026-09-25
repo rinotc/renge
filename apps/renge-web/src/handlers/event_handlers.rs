@@ -1,8 +1,9 @@
 use crate::{
     error::AppError,
-    handlers::{is_htmx, optional, parse_datetime, required},
+    handlers::is_htmx,
+    presenters::event::create_event_presenter::CreateEventRequest,
     state::AppState,
-    views::{EventCardTemplate, EventDetailTemplate, EventIndexTemplate},
+    views::{EventDetailTemplate, EventIndexTemplate},
 };
 use askama::Template;
 use axum::{
@@ -11,21 +12,9 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::{Html, IntoResponse, Redirect, Response},
 };
-use chrono::Utc;
 use infra_postgres_renge_orm::orm::{events as event, participants as participant};
-use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, Set,
-};
-use serde::Deserialize;
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
 use uuid::Uuid;
-
-#[derive(Deserialize)]
-pub(crate) struct EventForm {
-    title: String,
-    description: String,
-    starts_at: String,
-    location: String,
-}
 
 pub(crate) async fn index(State(state): State<AppState>) -> Result<Html<String>, AppError> {
     let events = event::Entity::find()
@@ -53,23 +42,14 @@ pub(crate) async fn show_event(
 pub(crate) async fn create_event(
     State(state): State<AppState>,
     headers: HeaderMap,
-    Form(form): Form<EventForm>,
+    Form(request): Form<CreateEventRequest>,
 ) -> Result<Response, AppError> {
-    let model = event::ActiveModel {
-        id: Set(Uuid::new_v4()),
-        title: Set(required(&form.title, "イベント名")?.into()),
-        description: Set(optional(&form.description)),
-        starts_at: Set(parse_datetime(&form.starts_at)?),
-        location: Set(optional(&form.location)),
-        created_at: Set(Utc::now().fixed_offset()),
-    }
-    .insert(&state.dbc)
-    .await?;
+    let presentation = state.create_event_presenter.present(request).await?;
 
     Ok(if is_htmx(&headers) {
-        Html(EventCardTemplate::new(&model).render()?).into_response()
+        Html(presentation.event_card.render()?).into_response()
     } else {
-        Redirect::to(&format!("/events/{}", model.id)).into_response()
+        Redirect::to(&format!("/events/{}", presentation.event_id)).into_response()
     })
 }
 

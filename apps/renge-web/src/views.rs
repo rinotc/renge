@@ -1,5 +1,6 @@
 use askama::Template;
 use chrono::{DateTime, FixedOffset};
+use domains_event::event::Event as DomainEvent;
 use infra_postgres_renge_orm::orm::{events as event, participants as participant};
 use uuid::Uuid;
 
@@ -90,7 +91,7 @@ pub(crate) struct EventCardTemplate {
 }
 
 impl EventCardTemplate {
-    pub(crate) fn new(event: &event::Model) -> Self {
+    pub(crate) fn from_domain(event: &DomainEvent) -> Self {
         Self {
             event: EventView::from(event),
         }
@@ -142,6 +143,28 @@ impl From<&event::Model> for EventView {
             location: event
                 .location
                 .clone()
+                .unwrap_or_else(|| "会場未定".to_owned()),
+        }
+    }
+}
+
+impl From<&DomainEvent> for EventView {
+    fn from(event: &DomainEvent) -> Self {
+        let description = event
+            .description
+            .as_ref()
+            .map(|description| description.as_str().to_owned())
+            .unwrap_or_default();
+        Self {
+            id: event.id.value(),
+            title: event.title.as_str().to_owned(),
+            has_description: !description.is_empty(),
+            description,
+            starts_at: date(event.start_at),
+            location: event
+                .location
+                .as_ref()
+                .map(|location| location.as_str().to_owned())
                 .unwrap_or_else(|| "会場未定".to_owned()),
         }
     }

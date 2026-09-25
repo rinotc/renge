@@ -7,7 +7,13 @@ pub trait IdProvider<ID>: Send + Sync {
 }
 
 pub struct UuidIdProvider {
-    clock: dyn Clock,
+    clock: Box<dyn Clock>,
+}
+
+impl UuidIdProvider {
+    pub fn new(clock: Box<dyn Clock>) -> Self {
+        Self { clock }
+    }
 }
 
 impl IdProvider<Uuid> for UuidIdProvider {

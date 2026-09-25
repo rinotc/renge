@@ -1,10 +1,19 @@
+use crate::{
+    presenters::event::create_event_presenter::CreateEventPresenter,
+    usecase::event::create_event_usecase::CreateEventUseCase,
+};
+use adapters_event::event::postgres_event_repository::PostgresEventRepository;
+use libs_clock::clock::SystemClock;
+use libs_modeling::id_provider::UuidIdProvider;
 use sea_orm::{Database, DatabaseConnection, DbErr};
 use std::error::Error;
+use std::sync::Arc;
 use std::{env, fmt};
 
 #[derive(Clone)]
 pub struct AppState {
     pub dbc: DatabaseConnection,
+    pub(crate) create_event_presenter: Arc<CreateEventPresenter>,
 }
 
 impl AppState {
@@ -14,7 +23,16 @@ impl AppState {
         let dbc = Database::connect(database_url)
             .await
             .map_err(|e| AppStateError::DatabaseConnectionError(e))?;
-        Ok(Self { dbc })
+        let event_repository = PostgresEventRepository::new(dbc.clone());
+        let create_event_use_case = CreateEventUseCase::new(
+            Box::new(UuidIdProvider::new(Box::new(SystemClock::new()))),
+            Box::new(event_repository),
+        );
+
+        Ok(Self {
+            dbc,
+            create_event_presenter: Arc::new(CreateEventPresenter::new(create_event_use_case)),
+        })
     }
 }
 

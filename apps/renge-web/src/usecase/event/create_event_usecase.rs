@@ -3,7 +3,6 @@ use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
 use domains_event::event::Event;
 use domains_event::event::event_description::EventDescription;
-use domains_event::event::event_id::EventId;
 use domains_event::event::event_location::EventLocation;
 use domains_event::event::event_repository::{EventRepository, RepositoryError};
 use domains_event::event::event_title::EventTitle;
@@ -14,6 +13,18 @@ use uuid::Uuid;
 pub struct CreateEventUseCase {
     id_provider: Box<dyn IdProvider<Uuid>>,
     event_repository: Box<dyn EventRepository>,
+}
+
+impl CreateEventUseCase {
+    pub fn new(
+        id_provider: Box<dyn IdProvider<Uuid>>,
+        event_repository: Box<dyn EventRepository>,
+    ) -> Self {
+        Self {
+            id_provider,
+            event_repository,
+        }
+    }
 }
 
 #[async_trait]
@@ -31,21 +42,19 @@ impl UseCase for CreateEventUseCase {
             input.location,
         );
         self.event_repository.insert(&event).await?;
-        Ok(Created {
-            event_id: event.id.clone(),
-        })
+        Ok(Created { event })
     }
 }
 
 #[derive(Debug, PartialEq)]
 pub struct CreateEventInput {
     pub title: EventTitle,
-    pub description: EventDescription,
+    pub description: Option<EventDescription>,
     pub starts_at: DateTime<FixedOffset>,
-    pub location: EventLocation,
+    pub location: Option<EventLocation>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum CreateEventOutput {
-    Created { event_id: EventId },
+    Created { event: Event },
 }

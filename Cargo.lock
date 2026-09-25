@@ -1732,12 +1732,14 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 name = "renge-web"
 version = "0.1.0"
 dependencies = [
+ "adapters-event",
  "askama",
  "async-trait",
  "axum",
  "chrono",
  "domains-event",
  "infra-postgres-renge-orm",
+ "libs-clock",
  "libs-modeling",
  "libs-usecase",
  "sea-orm",

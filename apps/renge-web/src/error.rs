@@ -1,15 +1,18 @@
+use crate::presenters::event::create_event_presenter::CreateEventPresenterError;
 use crate::views::ErrorTemplate;
 use askama::Template;
 use axum::{
     http::StatusCode,
     response::{Html, IntoResponse, Response},
 };
+use domains_event::event::event_repository::RepositoryError;
 use sea_orm::DbErr;
 
 pub(crate) enum AppError {
     NotFound,
     BadRequest(String),
     Database(DbErr),
+    UseCase(RepositoryError),
     Template(askama::Error),
 }
 
@@ -22,6 +25,15 @@ impl From<DbErr> for AppError {
 impl From<askama::Error> for AppError {
     fn from(error: askama::Error) -> Self {
         Self::Template(error)
+    }
+}
+
+impl From<CreateEventPresenterError> for AppError {
+    fn from(error: CreateEventPresenterError) -> Self {
+        match error {
+            CreateEventPresenterError::BadRequest(message) => Self::BadRequest(message),
+            CreateEventPresenterError::UseCase(error) => Self::UseCase(error),
+        }
     }
 }
 
@@ -38,6 +50,13 @@ impl IntoResponse for AppError {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "データベース処理に失敗しました。".into(),
+                )
+            }
+            Self::UseCase(error) => {
+                tracing::error!(%error, "use case error");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "イベント処理に失敗しました。".into(),
                 )
             }
             Self::Template(error) => {

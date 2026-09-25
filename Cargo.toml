@@ -24,6 +24,7 @@ libs-usecase = { path = "libs/usecase" }
 libs-paging = { path = "libs/paging" }
 libs-clock = { path = "libs/clock" }
 libs-modeling = { path = "libs/modeling" }
+adapters-event = { path = "adapters/adapters-event" }
 
 # 依存
 axum = "0.8"

@@ -13,6 +13,10 @@ impl EventTitle {
         Ok(Self(title))
     }
 
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
     /// イベントタイトルは100文字以内
     /// 空白を許容しない
     fn validate(value: &str) -> Result<(), EventTitleError> {

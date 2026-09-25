@@ -11,9 +11,9 @@ use uuid::Uuid;
 pub struct Event {
     pub id: EventId,
     pub title: EventTitle,
-    pub description: EventDescription,
+    pub description: Option<EventDescription>,
     pub start_at: DateTime<FixedOffset>,
-    pub location: EventLocation,
+    pub location: Option<EventLocation>,
 }
 
 impl Event {
@@ -27,18 +27,18 @@ impl Event {
         Self {
             id: EventId::generate(uuid_provider),
             title,
-            description,
+            description: Some(description),
             start_at,
-            location,
+            location: Some(location),
         }
     }
 
     pub fn new(
         id: EventId,
         title: EventTitle,
-        description: EventDescription,
+        description: Option<EventDescription>,
         start_at: DateTime<FixedOffset>,
-        location: EventLocation,
+        location: Option<EventLocation>,
     ) -> Self {
         Self {
             id,

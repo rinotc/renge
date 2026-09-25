@@ -11,6 +11,7 @@ libs-modeling = { workspace = true }
 domains-event = { workspace = true }
 
 # external crate
+async-trait = { workspace = true }
 axum = { workspace = true }
 askama = { workspace = true }
 chrono = { workspace = true }

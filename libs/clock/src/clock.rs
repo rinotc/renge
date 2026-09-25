@@ -1,7 +1,7 @@
 use chrono::DateTime;
 use std::time::SystemTime;
 
-pub trait Clock {
+pub trait Clock: Send + Sync {
     fn now(&self) -> SystemTime;
 }
 

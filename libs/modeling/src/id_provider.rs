@@ -2,7 +2,7 @@ use libs_clock::clock::Clock;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::{ContextV7, Timestamp, Uuid};
 
-pub trait IdProvider<ID> {
+pub trait IdProvider<ID>: Send + Sync {
     fn generate(&self) -> ID;
 }
 

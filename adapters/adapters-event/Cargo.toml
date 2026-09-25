@@ -1,0 +1,15 @@
+[package]
+name = "adapters-event"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+libs-paging = { workspace = true }
+domains-event = { workspace = true }
+infra-postgres-renge-orm = { workspace = true }
+libs-modeling = { workspace = true }
+
+async-trait = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+sea-orm = { workspace = true }

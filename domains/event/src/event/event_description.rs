@@ -5,12 +5,18 @@ pub struct EventDescription(String);
 
 impl EventDescription {
     pub fn new(description: String) -> Self {
-        Self::validate(&description).map(|_| Self(description)).unwrap()
+        Self::validate(&description)
+            .map(|_| Self(description))
+            .unwrap()
     }
 
     pub fn try_new(description: String) -> Result<Self, EventDescriptionError> {
         Self::validate(&description)?;
         Ok(Self(description))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
     }
 
     /// イベント説明は1000文字以内

@@ -1,10 +1,11 @@
 use crate::usecase::event::create_event_usecase::CreateEventOutput::Created;
+use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
 use domains_event::event::Event;
 use domains_event::event::event_description::EventDescription;
 use domains_event::event::event_id::EventId;
 use domains_event::event::event_location::EventLocation;
-use domains_event::event::event_repository::EventRepository;
+use domains_event::event::event_repository::{EventRepository, RepositoryError};
 use domains_event::event::event_title::EventTitle;
 use libs_modeling::id_provider::IdProvider;
 use libs_usecase::usecase::usecase::UseCase;
@@ -15,11 +16,13 @@ pub struct CreateEventUseCase {
     event_repository: Box<dyn EventRepository>,
 }
 
+#[async_trait]
 impl UseCase for CreateEventUseCase {
     type Input = CreateEventInput;
     type Output = CreateEventOutput;
+    type Error = RepositoryError;
 
-    fn handle(&self, input: Self::Input) -> Self::Output {
+    async fn handle(&self, input: Self::Input) -> Result<Self::Output, Self::Error> {
         let event = Event::create(
             &*self.id_provider,
             input.title,
@@ -27,10 +30,10 @@ impl UseCase for CreateEventUseCase {
             input.starts_at,
             input.location,
         );
-        self.event_repository.insert(&event);
-        Created {
+        self.event_repository.insert(&event).await?;
+        Ok(Created {
             event_id: event.id.clone(),
-        }
+        })
     }
 }
 
@@ -42,7 +45,7 @@ pub struct CreateEventInput {
     pub location: EventLocation,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum CreateEventOutput {
     Created { event_id: EventId },
 }

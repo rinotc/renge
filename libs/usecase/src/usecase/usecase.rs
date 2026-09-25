@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 /// 入力と出力の型を定義した、汎用的なユースケースを表すトレイトです。
 ///
 /// ユースケースの業務ロジックやアプリケーション処理をカプセル化し、
@@ -11,8 +13,8 @@
 ///
 /// # 必須メソッド
 ///
-/// - `handle(&self, input: Self::Input) -> Self::Output`:
-///   入力を処理し、対応する出力を返します。ユースケースの中心となる処理を実装します。
+/// - `handle(&self, input: Self::Input) -> Result<Self::Output, Self::Error>`:
+///   非同期で入力を処理し、成功時は出力、失敗時はエラーを返します。
 ///
 /// # 使用例
 ///
@@ -20,7 +22,9 @@
 /// 処理結果を列挙型で表現できます。
 ///
 /// ```rust
+/// use async_trait::async_trait;
 /// use libs_usecase::usecase::usecase::UseCase;
+/// use std::convert::Infallible;
 ///
 /// #[derive(Debug, PartialEq)]
 /// struct CreateEventInput {
@@ -35,30 +39,42 @@
 ///
 /// struct CreateEventUseCase;
 ///
+/// #[async_trait]
 /// impl UseCase for CreateEventUseCase {
 ///     type Input = CreateEventInput;
 ///     type Output = CreateEventOutput;
+///     type Error = Infallible;
 ///
-///     fn handle(&self, input: Self::Input) -> Self::Output {
+///     async fn handle(
+///         &self,
+///         input: Self::Input,
+///     ) -> Result<Self::Output, Self::Error> {
 ///         if input.title.trim().is_empty() {
-///             CreateEventOutput::InvalidTitle
+///             Ok(CreateEventOutput::InvalidTitle)
 ///         } else {
 ///             // 実際には、ここでイベントを保存して発行された ID を返します。
-///             CreateEventOutput::Created { event_id: 1 }
+///             Ok(CreateEventOutput::Created { event_id: 1 })
 ///         }
 ///     }
 /// }
 ///
-/// let create_event_use_case = CreateEventUseCase;
-/// let output = create_event_use_case.handle(CreateEventInput {
-///     title: "Rust 勉強会".to_string(),
-/// });
+/// async fn example() {
+///     let create_event_use_case = CreateEventUseCase;
+///     let output = create_event_use_case
+///         .handle(CreateEventInput {
+///             title: "Rust 勉強会".to_string(),
+///         })
+///         .await
+///         .unwrap();
 ///
-/// assert_eq!(output, CreateEventOutput::Created { event_id: 1 });
+///     assert_eq!(output, CreateEventOutput::Created { event_id: 1 });
+/// }
 /// ```
-pub trait UseCase {
-    type Input;
-    type Output;
+#[async_trait]
+pub trait UseCase: Send + Sync {
+    type Input: Send;
+    type Output: Send;
+    type Error: Send + Sync + 'static;
 
-    fn handle(&self, input: Self::Input) -> Self::Output;
+    async fn handle(&self, input: Self::Input) -> Result<Self::Output, Self::Error>;
 }

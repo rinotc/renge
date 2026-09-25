@@ -5,4 +5,8 @@ impl EventLocation {
     pub fn new(location: String) -> Self {
         Self(location)
     }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }

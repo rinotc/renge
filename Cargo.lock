@@ -3,6 +3,20 @@
 version = 4
 
 [[package]]
+name = "adapters-event"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "domains-event",
+ "infra-postgres-renge-orm",
+ "libs-modeling",
+ "libs-paging",
+ "sea-orm",
+ "serde",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -584,6 +598,7 @@ dependencies = [
 name = "domains-event"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "chrono",
  "libs-clock",
  "libs-modeling",
@@ -1199,6 +1214,9 @@ version = "0.1.0"
 [[package]]
 name = "libs-usecase"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+]
 
 [[package]]
 name = "libsqlite3-sys"
@@ -1715,6 +1733,7 @@ name = "renge-web"
 version = "0.1.0"
 dependencies = [
  "askama",
+ "async-trait",
  "axum",
  "chrono",
  "domains-event",

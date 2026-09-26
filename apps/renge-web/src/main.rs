@@ -4,7 +4,7 @@ mod error;
 mod handlers;
 mod presenters;
 mod state;
-mod views;
+mod templates;
 pub mod usecase;
 
 use crate::{

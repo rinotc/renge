@@ -1,5 +1,5 @@
+use crate::templates::event_detail::EventDetailTemplate;
 use crate::usecase::event::show_event_usecase::{ShowEventInput, ShowEventUseCase};
-use crate::views::EventDetailTemplate;
 use domains_event::event::event_repository::RepositoryError;
 use libs_usecase::usecase::usecase::UseCase;
 use uuid::Uuid;

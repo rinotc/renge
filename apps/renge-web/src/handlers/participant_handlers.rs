@@ -2,7 +2,7 @@ use crate::{
     error::AppError,
     handlers::{event_handlers::find_event, is_htmx, required},
     state::AppState,
-    views::{Attendance, ParticipantRowTemplate},
+    templates::participant_row::{Attendance, ParticipantRowTemplate},
 };
 use askama::Template;
 use axum::{

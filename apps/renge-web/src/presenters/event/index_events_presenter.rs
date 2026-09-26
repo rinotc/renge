@@ -1,7 +1,7 @@
+use crate::templates::event_index::EventIndexTemplate;
 use crate::usecase::event::list_events_usecase::{
     EVENT_PAGE_SIZE, ListEventsInput, ListEventsUseCase,
 };
-use crate::views::EventIndexTemplate;
 use domains_event::event::event_repository::RepositoryError;
 use libs_paging::paging::offset_paging::OffsetPaging;
 use libs_usecase::usecase::usecase::UseCase;
@@ -18,6 +18,11 @@ pub(crate) struct EventIndexPresentation {
 
 pub(crate) struct IndexEventsPresenter {
     list_events_use_case: ListEventsUseCase,
+}
+
+pub(crate) enum IndexEventsPresenterError {
+    BadRequest,
+    UseCase(RepositoryError),
 }
 
 impl IndexEventsPresenter {
@@ -62,9 +67,4 @@ impl IndexEventsPresenter {
             template: EventIndexTemplate::new(events, page, page > 1, has_next),
         })
     }
-}
-
-pub(crate) enum IndexEventsPresenterError {
-    BadRequest,
-    UseCase(RepositoryError),
 }

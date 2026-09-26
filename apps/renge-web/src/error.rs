@@ -4,7 +4,7 @@ use crate::presenters::event::{
     index_events_presenter::IndexEventsPresenterError,
     show_event_presenter::ShowEventPresenterError,
 };
-use crate::views::ErrorTemplate;
+use crate::templates::error::ErrorTemplate;
 use askama::Template;
 use axum::{
     http::StatusCode,

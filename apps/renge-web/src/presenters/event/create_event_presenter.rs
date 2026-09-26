@@ -1,4 +1,7 @@
-use crate::{usecase::event::create_event_usecase::CreateEventUseCase, views::EventCardTemplate};
+use crate::{
+    templates::event_card::EventCardTemplate,
+    usecase::event::create_event_usecase::CreateEventUseCase,
+};
 use chrono::NaiveDateTime;
 use domains_event::event::{
     Event,

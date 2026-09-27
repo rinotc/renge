@@ -14,7 +14,6 @@ dependencies = [
  "libs-paging",
  "libs-shared-primitive",
  "sea-orm",
- "serde",
 ]
 
 [[package]]

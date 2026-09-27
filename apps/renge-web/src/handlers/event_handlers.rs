@@ -13,8 +13,6 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::{Html, IntoResponse, Redirect, Response},
 };
-use infra_postgres_renge_orm::orm::events as event;
-use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
 pub(crate) async fn index(
@@ -61,14 +59,4 @@ pub(crate) async fn delete_event(
     } else {
         Redirect::to("/").into_response()
     })
-}
-
-pub(crate) async fn find_event(
-    db: &DatabaseConnection,
-    id: Uuid,
-) -> Result<event::Model, AppError> {
-    event::Entity::find_by_id(id)
-        .one(db)
-        .await?
-        .ok_or(AppError::NotFound)
 }

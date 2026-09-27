@@ -24,7 +24,7 @@ impl libs_usecase::usecase::usecase::UseCase for ListEventsUseCase {
 
     async fn handle(&self, input: Self::Input) -> Result<Self::Output, Self::Error> {
         let events = self.event_repository.list(input.paging).await?;
-        Ok(ListEventsOutput { events })
+        Ok(ListEventsOutput::Listed { events })
     }
 }
 
@@ -32,6 +32,33 @@ pub struct ListEventsInput {
     pub paging: OffsetPaging,
 }
 
-pub struct ListEventsOutput {
-    pub events: OffsetPaged<domains_event::event::Event>,
+pub enum ListEventsOutput {
+    Listed {
+        events: OffsetPaged<domains_event::event::Event>,
+    },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ListEventsInput, ListEventsOutput, ListEventsUseCase};
+    use crate::usecase::participant::test_support::FakeEventRepository;
+    use libs_paging::paging::offset_paging::OffsetPaging;
+    use libs_usecase::usecase::usecase::UseCase;
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn returns_listed_output() {
+        let use_case = ListEventsUseCase::new(Arc::new(FakeEventRepository::default()));
+
+        let output = use_case
+            .handle(ListEventsInput {
+                paging: OffsetPaging::new(20, 0),
+            })
+            .await
+            .unwrap();
+
+        match output {
+            ListEventsOutput::Listed { events } => assert!(events.items.is_empty()),
+        }
+    }
 }

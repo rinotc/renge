@@ -1738,7 +1738,6 @@ dependencies = [
  "axum",
  "chrono",
  "domains-event",
- "infra-postgres-renge-orm",
  "libs-clock",
  "libs-modeling",
  "libs-paging",

@@ -1,4 +1,6 @@
-use crate::usecase::event::delete_event_usecase::{DeleteEventInput, DeleteEventUseCase};
+use crate::usecase::event::delete_event_usecase::{
+    DeleteEventInput, DeleteEventOutput, DeleteEventUseCase,
+};
 use domains_event::event::event_repository::RepositoryError;
 use libs_usecase::usecase::usecase::UseCase;
 use uuid::Uuid;
@@ -15,11 +17,14 @@ impl DeleteEventPresenter {
     }
 
     pub(crate) async fn present(&self, id: Uuid) -> Result<(), DeleteEventPresenterError> {
-        self.delete_event_use_case
+        let output = self
+            .delete_event_use_case
             .handle(DeleteEventInput::new(id))
             .await
             .map_err(DeleteEventPresenterError::UseCase)?;
-        Ok(())
+        match output {
+            DeleteEventOutput::Deleted => Ok(()),
+        }
     }
 }
 

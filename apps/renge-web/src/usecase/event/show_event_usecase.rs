@@ -27,22 +27,22 @@ impl ShowEventUseCase {
 #[async_trait]
 impl libs_usecase::usecase::usecase::UseCase for ShowEventUseCase {
     type Input = ShowEventInput;
-    type Output = Option<ShowEventOutput>;
+    type Output = ShowEventOutput;
     type Error = RepositoryError;
 
     async fn handle(&self, input: Self::Input) -> Result<Self::Output, Self::Error> {
         let Some(event) = self.event_repository.find_by_id(&input.event_id).await? else {
-            return Ok(None);
+            return Ok(ShowEventOutput::EventNotFound);
         };
         let participants = self
             .participant_repository
             .list_by_event_id(&input.event_id)
             .await?;
 
-        Ok(Some(ShowEventOutput {
+        Ok(ShowEventOutput::Shown {
             event,
             participants,
-        }))
+        })
     }
 }
 
@@ -58,7 +58,62 @@ impl ShowEventInput {
     }
 }
 
-pub struct ShowEventOutput {
-    pub event: Event,
-    pub participants: Vec<Participant>,
+pub enum ShowEventOutput {
+    Shown {
+        event: Event,
+        participants: Vec<Participant>,
+    },
+    EventNotFound,
+}
+#[cfg(test)]
+mod tests {
+    use super::{ShowEventInput, ShowEventOutput, ShowEventUseCase};
+    use crate::usecase::participant::test_support::{
+        FakeEventRepository, FakeParticipantRepository, sample_event, sample_participant,
+    };
+    use libs_usecase::usecase::usecase::UseCase;
+    use std::sync::Arc;
+    use uuid::Uuid;
+
+    #[tokio::test]
+    async fn returns_shown_output_with_participants() {
+        let event_id = Uuid::from_u128(1);
+        let use_case = ShowEventUseCase::new(
+            Arc::new(FakeEventRepository::new(vec![sample_event(event_id)])),
+            Arc::new(FakeParticipantRepository::new(vec![sample_participant(
+                event_id,
+                Uuid::from_u128(2),
+            )])),
+        );
+
+        match use_case
+            .handle(ShowEventInput::new(event_id))
+            .await
+            .unwrap()
+        {
+            ShowEventOutput::Shown {
+                event,
+                participants,
+            } => {
+                assert_eq!(event.id.value(), event_id);
+                assert_eq!(participants.len(), 1);
+            }
+            ShowEventOutput::EventNotFound => panic!("event should exist"),
+        }
+    }
+
+    #[tokio::test]
+    async fn returns_event_not_found_output() {
+        let use_case = ShowEventUseCase::new(
+            Arc::new(FakeEventRepository::default()),
+            Arc::new(FakeParticipantRepository::default()),
+        );
+
+        let output = use_case
+            .handle(ShowEventInput::new(Uuid::from_u128(99)))
+            .await
+            .unwrap();
+
+        assert!(matches!(output, ShowEventOutput::EventNotFound));
+    }
 }

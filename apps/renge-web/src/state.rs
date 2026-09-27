@@ -3,9 +3,19 @@ use crate::{
         create_event_presenter::CreateEventPresenter, delete_event_presenter::DeleteEventPresenter,
         index_events_presenter::IndexEventsPresenter, show_event_presenter::ShowEventPresenter,
     },
+    presenters::participant::{
+        create_participant_presenter::CreateParticipantPresenter,
+        delete_participant_presenter::DeleteParticipantPresenter,
+        update_participant_attendance_presenter::UpdateParticipantAttendancePresenter,
+    },
     usecase::event::{
         create_event_usecase::CreateEventUseCase, delete_event_usecase::DeleteEventUseCase,
         list_events_usecase::ListEventsUseCase, show_event_usecase::ShowEventUseCase,
+    },
+    usecase::participant::{
+        create_participant_usecase::CreateParticipantUseCase,
+        delete_participant_usecase::DeleteParticipantUseCase,
+        update_participant_attendance_usecase::UpdateParticipantAttendanceUseCase,
     },
 };
 use adapters_event::{
@@ -16,7 +26,7 @@ use domains_event::event::event_repository::EventRepository;
 use domains_event::participant::ParticipantRepository;
 use libs_clock::clock::{Clock, SystemClock};
 use libs_modeling::id_provider::{IdProvider, UuidIdProvider};
-use sea_orm::{Database, DatabaseConnection, DbErr};
+use sea_orm::{Database, DbErr};
 use std::error::Error;
 use std::sync::Arc;
 use std::{env, fmt};
@@ -24,11 +34,13 @@ use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub dbc: DatabaseConnection,
     pub(crate) create_event_presenter: Arc<CreateEventPresenter>,
     pub(crate) index_events_presenter: Arc<IndexEventsPresenter>,
     pub(crate) show_event_presenter: Arc<ShowEventPresenter>,
     pub(crate) delete_event_presenter: Arc<DeleteEventPresenter>,
+    pub(crate) create_participant_presenter: Arc<CreateParticipantPresenter>,
+    pub(crate) update_participant_attendance_presenter: Arc<UpdateParticipantAttendancePresenter>,
+    pub(crate) delete_participant_presenter: Arc<DeleteParticipantPresenter>,
 }
 
 impl AppState {
@@ -51,19 +63,36 @@ impl AppState {
             Arc::new(PostgresParticipantRepository::new(dbc.clone()));
         let create_event_usecase =
             CreateEventUseCase::new(id_provider.clone(), event_repository.clone());
+        let create_participant_usecase = CreateParticipantUseCase::new(
+            id_provider,
+            event_repository.clone(),
+            participant_repository.clone(),
+        );
+        let update_participant_attendance_usecase =
+            UpdateParticipantAttendanceUseCase::new(participant_repository.clone());
+        let delete_participant_usecase =
+            DeleteParticipantUseCase::new(participant_repository.clone());
 
         // UseCase
         let list_events_usecase = ListEventsUseCase::new(event_repository.clone());
         let show_event_usecase =
-            ShowEventUseCase::new(event_repository.clone(), participant_repository);
+            ShowEventUseCase::new(event_repository.clone(), participant_repository.clone());
         let delete_event_usecase = DeleteEventUseCase::new(event_repository);
 
         Ok(Self {
-            dbc,
             create_event_presenter: Arc::new(CreateEventPresenter::new(create_event_usecase)),
             index_events_presenter: Arc::new(IndexEventsPresenter::new(list_events_usecase)),
             show_event_presenter: Arc::new(ShowEventPresenter::new(show_event_usecase)),
             delete_event_presenter: Arc::new(DeleteEventPresenter::new(delete_event_usecase)),
+            create_participant_presenter: Arc::new(CreateParticipantPresenter::new(
+                create_participant_usecase,
+            )),
+            update_participant_attendance_presenter: Arc::new(
+                UpdateParticipantAttendancePresenter::new(update_participant_attendance_usecase),
+            ),
+            delete_participant_presenter: Arc::new(DeleteParticipantPresenter::new(
+                delete_participant_usecase,
+            )),
         })
     }
 }

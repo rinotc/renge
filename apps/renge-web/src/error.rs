@@ -4,6 +4,11 @@ use crate::presenters::event::{
     index_events_presenter::IndexEventsPresenterError,
     show_event_presenter::ShowEventPresenterError,
 };
+use crate::presenters::participant::{
+    create_participant_presenter::CreateParticipantPresenterError,
+    delete_participant_presenter::DeleteParticipantPresenterError,
+    update_participant_attendance_presenter::UpdateParticipantAttendancePresenterError,
+};
 use crate::templates::error::ErrorTemplate;
 use askama::Template;
 use axum::{
@@ -11,20 +16,12 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use domains_event::event::event_repository::RepositoryError;
-use sea_orm::DbErr;
 
 pub(crate) enum AppError {
     NotFound,
     BadRequest(String),
-    Database(DbErr),
     UseCase(RepositoryError),
     Template(askama::Error),
-}
-
-impl From<DbErr> for AppError {
-    fn from(error: DbErr) -> Self {
-        Self::Database(error)
-    }
 }
 
 impl From<askama::Error> for AppError {
@@ -70,6 +67,36 @@ impl From<DeleteEventPresenterError> for AppError {
     }
 }
 
+impl From<CreateParticipantPresenterError> for AppError {
+    fn from(error: CreateParticipantPresenterError) -> Self {
+        match error {
+            CreateParticipantPresenterError::BadRequest(message) => Self::BadRequest(message),
+            CreateParticipantPresenterError::NotFound => Self::NotFound,
+            CreateParticipantPresenterError::UseCase(error) => Self::UseCase(error),
+        }
+    }
+}
+
+impl From<UpdateParticipantAttendancePresenterError> for AppError {
+    fn from(error: UpdateParticipantAttendancePresenterError) -> Self {
+        match error {
+            UpdateParticipantAttendancePresenterError::BadRequest => {
+                Self::BadRequest("不正な出欠状態です。".into())
+            }
+            UpdateParticipantAttendancePresenterError::NotFound => Self::NotFound,
+            UpdateParticipantAttendancePresenterError::UseCase(error) => Self::UseCase(error),
+        }
+    }
+}
+
+impl From<DeleteParticipantPresenterError> for AppError {
+    fn from(error: DeleteParticipantPresenterError) -> Self {
+        match error {
+            DeleteParticipantPresenterError::UseCase(error) => Self::UseCase(error),
+        }
+    }
+}
+
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, message) = match self {
@@ -78,13 +105,6 @@ impl IntoResponse for AppError {
                 "対象のイベントまたは参加者が見つかりません。".into(),
             ),
             Self::BadRequest(message) => (StatusCode::BAD_REQUEST, message),
-            Self::Database(error) => {
-                tracing::error!(%error, "database error");
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "データベース処理に失敗しました。".into(),
-                )
-            }
             Self::UseCase(error) => {
                 tracing::error!(%error, "use case error");
                 (

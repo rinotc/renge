@@ -1,5 +1,7 @@
 use crate::templates::event_detail::EventDetailTemplate;
-use crate::usecase::event::show_event_usecase::{ShowEventInput, ShowEventUseCase};
+use crate::usecase::event::show_event_usecase::{
+    ShowEventInput, ShowEventOutput, ShowEventUseCase,
+};
 use domains_event::event::event_repository::RepositoryError;
 use libs_usecase::usecase::usecase::UseCase;
 use uuid::Uuid;
@@ -27,12 +29,17 @@ impl ShowEventPresenter {
             .show_event_use_case
             .handle(ShowEventInput::new(id))
             .await
-            .map_err(ShowEventPresenterError::UseCase)?
-            .ok_or(ShowEventPresenterError::NotFound)?;
+            .map_err(ShowEventPresenterError::UseCase)?;
 
-        Ok(ShowEventPresentation {
-            template: EventDetailTemplate::new(&output.event, output.participants),
-        })
+        match output {
+            ShowEventOutput::Shown {
+                event,
+                participants,
+            } => Ok(ShowEventPresentation {
+                template: EventDetailTemplate::new(&event, participants),
+            }),
+            ShowEventOutput::EventNotFound => Err(ShowEventPresenterError::NotFound),
+        }
     }
 }
 

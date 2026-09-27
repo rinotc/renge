@@ -1,6 +1,6 @@
 use crate::templates::event_index::EventIndexTemplate;
 use crate::usecase::event::list_events_usecase::{
-    EVENT_PAGE_SIZE, ListEventsInput, ListEventsUseCase,
+    EVENT_PAGE_SIZE, ListEventsInput, ListEventsOutput, ListEventsUseCase,
 };
 use domains_event::event::event_repository::RepositoryError;
 use libs_paging::paging::offset_paging::OffsetPaging;
@@ -55,9 +55,11 @@ impl IndexEventsPresenter {
             .await
             .map_err(IndexEventsPresenterError::UseCase)?;
 
-        let has_next = output.events.items.len() > EVENT_PAGE_SIZE as usize;
-        let events = output
-            .events
+        let events = match output {
+            ListEventsOutput::Listed { events } => events,
+        };
+        let has_next = events.items.len() > EVENT_PAGE_SIZE as usize;
+        let events = events
             .items
             .into_iter()
             .take(EVENT_PAGE_SIZE as usize)

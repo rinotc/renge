@@ -1,7 +1,8 @@
 use crate::event::event_id::EventId;
-use crate::participant::{ParticipantAttendance, ParticipantEmail, ParticipantId, ParticipantName};
+use crate::participant::{ParticipantAttendance, ParticipantId, ParticipantName};
 use libs_modeling::id_provider::IdProvider;
 use libs_modeling::identifier::Identifier;
+use libs_shared_primitive::email::Email;
 use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -9,7 +10,7 @@ pub struct Participant {
     pub id: ParticipantId,
     pub event_id: EventId,
     pub name: ParticipantName,
-    pub email: ParticipantEmail,
+    pub email: Email,
     pub attendance: ParticipantAttendance,
 }
 
@@ -18,7 +19,7 @@ impl Participant {
         id_provider: &dyn IdProvider<Uuid>,
         event_id: EventId,
         name: ParticipantName,
-        email: ParticipantEmail,
+        email: Email,
     ) -> Self {
         Self {
             id: ParticipantId::generate(id_provider),
@@ -33,7 +34,7 @@ impl Participant {
         id: ParticipantId,
         event_id: EventId,
         name: ParticipantName,
-        email: ParticipantEmail,
+        email: Email,
         attendance: ParticipantAttendance,
     ) -> Self {
         Self {
@@ -55,9 +56,10 @@ mod tests {
     use super::Participant;
     use crate::{
         event::event_id::EventId,
-        participant::{ParticipantAttendance, ParticipantEmail, ParticipantName},
+        participant::{ParticipantAttendance, ParticipantName},
     };
     use libs_modeling::{id_provider::IdProvider, identifier::Identifier};
+    use libs_shared_primitive::email::Email;
     use uuid::Uuid;
 
     struct FixedIdProvider(Uuid);
@@ -76,7 +78,7 @@ mod tests {
             &FixedIdProvider(id),
             event_id.clone(),
             ParticipantName::try_new("参加者".to_owned()).unwrap(),
-            ParticipantEmail::try_new("person@example.com".to_owned()).unwrap(),
+            Email::try_new("person@example.com".to_owned()).unwrap(),
         );
 
         assert_eq!(participant.id.value(), id);

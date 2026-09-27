@@ -10,6 +10,7 @@ members = [
     "libs/paging",
     "libs/clock",
     "libs/modeling",
+    "libs/shared-primitive",
     "adapters/adapters-event"
 ]
 
@@ -24,6 +25,7 @@ libs-usecase = { path = "libs/usecase" }
 libs-paging = { path = "libs/paging" }
 libs-clock = { path = "libs/clock" }
 libs-modeling = { path = "libs/modeling" }
+libs-shared-primitive = { path = "libs/shared-primitive" }
 adapters-event = { path = "adapters/adapters-event" }
 
 # 依存

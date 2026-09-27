@@ -12,6 +12,7 @@ dependencies = [
  "infra-postgres-renge-orm",
  "libs-modeling",
  "libs-paging",
+ "libs-shared-primitive",
  "sea-orm",
  "serde",
 ]
@@ -600,9 +601,9 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
- "libs-clock",
  "libs-modeling",
  "libs-paging",
+ "libs-shared-primitive",
  "uuid",
 ]
 
@@ -1212,6 +1213,10 @@ name = "libs-paging"
 version = "0.1.0"
 
 [[package]]
+name = "libs-shared-primitive"
+version = "0.1.0"
+
+[[package]]
 name = "libs-usecase"
 version = "0.1.0"
 dependencies = [
@@ -1741,6 +1746,7 @@ dependencies = [
  "libs-clock",
  "libs-modeling",
  "libs-paging",
+ "libs-shared-primitive",
  "libs-usecase",
  "sea-orm",
  "serde",

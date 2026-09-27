@@ -1,10 +1,10 @@
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ParticipantEmail(String);
+pub struct Email(String);
 
-impl ParticipantEmail {
-    pub fn try_new(value: String) -> Result<Self, ParticipantEmailError> {
+impl Email {
+    pub fn try_new(value: String) -> Result<Self, EmailError> {
         if value.trim().is_empty() {
-            return Err(ParticipantEmailError::BlankNotAllowed);
+            return Err(EmailError::BlankNotAllowed);
         }
 
         let mut parts = value.split('@');
@@ -36,7 +36,7 @@ impl ParticipantEmail {
                         .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
             })
         {
-            return Err(ParticipantEmailError::InvalidFormat);
+            return Err(EmailError::InvalidFormat);
         }
 
         Ok(Self(value))
@@ -47,9 +47,15 @@ impl ParticipantEmail {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EmailError {
+    BlankNotAllowed,
+    InvalidFormat,
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{ParticipantEmail, ParticipantEmailError};
+    use super::{Email, EmailError};
 
     #[test]
     fn accepts_basic_email_addresses() {
@@ -58,10 +64,7 @@ mod tests {
             "first.last+tag@local-host.test",
             "person@localhost",
         ] {
-            assert!(
-                ParticipantEmail::try_new(value.to_owned()).is_ok(),
-                "{value}"
-            );
+            assert!(Email::try_new(value.to_owned()).is_ok(), "{value}");
         }
     }
 
@@ -78,8 +81,8 @@ mod tests {
             "person@example..com",
         ] {
             assert_eq!(
-                ParticipantEmail::try_new(value.to_owned()),
-                Err(ParticipantEmailError::InvalidFormat),
+                Email::try_new(value.to_owned()),
+                Err(EmailError::InvalidFormat),
                 "{value}"
             );
         }
@@ -88,14 +91,8 @@ mod tests {
     #[test]
     fn rejects_blank_email_addresses() {
         assert_eq!(
-            ParticipantEmail::try_new("  ".to_owned()),
-            Err(ParticipantEmailError::BlankNotAllowed)
+            Email::try_new("  ".to_owned()),
+            Err(EmailError::BlankNotAllowed)
         );
     }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ParticipantEmailError {
-    BlankNotAllowed,
-    InvalidFormat,
 }

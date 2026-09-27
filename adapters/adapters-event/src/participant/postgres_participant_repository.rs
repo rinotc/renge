@@ -2,11 +2,11 @@ use async_trait::async_trait;
 use domains_event::event::event_id::EventId;
 use domains_event::event::event_repository::RepositoryError;
 use domains_event::participant::{
-    Participant, ParticipantAttendance, ParticipantEmail, ParticipantId, ParticipantName,
-    ParticipantRepository,
+    Participant, ParticipantAttendance, ParticipantId, ParticipantName, ParticipantRepository,
 };
 use infra_postgres_renge_orm::orm::participants;
 use libs_modeling::identifier::Identifier;
+use libs_shared_primitive::email::Email;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder, Set,
 };
@@ -34,7 +34,7 @@ fn invalid_data(message: impl Into<String>) -> RepositoryError {
 fn to_domain(model: participants::Model) -> Result<Participant, RepositoryError> {
     let name = ParticipantName::try_new(model.name)
         .map_err(|error| invalid_data(format!("invalid participant name: {error:?}")))?;
-    let email = ParticipantEmail::try_new(model.email)
+    let email = Email::try_new(model.email)
         .map_err(|error| invalid_data(format!("invalid participant email: {error:?}")))?;
     let attendance = ParticipantAttendance::parse(&model.attendance)
         .ok_or_else(|| invalid_data("invalid participant attendance"))?;

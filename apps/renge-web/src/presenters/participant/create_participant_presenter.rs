@@ -6,8 +6,9 @@ use crate::{
 };
 use domains_event::event::event_id::EventId;
 use domains_event::event::event_repository::RepositoryError;
-use domains_event::participant::{ParticipantEmail, ParticipantEmailError, ParticipantName};
+use domains_event::participant::ParticipantName;
 use libs_modeling::identifier::Identifier;
+use libs_shared_primitive::email::{Email, EmailError};
 use libs_usecase::usecase::usecase::UseCase;
 use serde::Deserialize;
 use uuid::Uuid;
@@ -42,8 +43,8 @@ impl CreateParticipantPresenter {
         let name = ParticipantName::try_new(required(&request.name, "氏名")?).map_err(|_| {
             CreateParticipantPresenterError::BadRequest("氏名を入力してください。".into())
         })?;
-        let email = ParticipantEmail::try_new(required(&request.email, "メールアドレス")?)
-            .map_err(email_error)?;
+        let email =
+            Email::try_new(required(&request.email, "メールアドレス")?).map_err(email_error)?;
 
         let output = self
             .create_participant_use_case
@@ -85,10 +86,10 @@ fn required(value: &str, name: &str) -> Result<String, CreateParticipantPresente
     Ok(value.to_owned())
 }
 
-fn email_error(error: ParticipantEmailError) -> CreateParticipantPresenterError {
+fn email_error(error: EmailError) -> CreateParticipantPresenterError {
     let message = match error {
-        ParticipantEmailError::BlankNotAllowed => "メールアドレスを入力してください。",
-        ParticipantEmailError::InvalidFormat => "メールアドレスの形式が正しくありません。",
+        EmailError::BlankNotAllowed => "メールアドレスを入力してください。",
+        EmailError::InvalidFormat => "メールアドレスの形式が正しくありません。",
     };
     CreateParticipantPresenterError::BadRequest(message.into())
 }

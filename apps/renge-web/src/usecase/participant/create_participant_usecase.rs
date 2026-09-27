@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use domains_event::event::event_id::EventId;
 use domains_event::event::event_repository::{EventRepository, RepositoryError};
-use domains_event::participant::{
-    Participant, ParticipantEmail, ParticipantName, ParticipantRepository,
-};
+use domains_event::participant::{Participant, ParticipantName, ParticipantRepository};
 use libs_modeling::id_provider::IdProvider;
+use libs_shared_primitive::email::Email;
 use libs_usecase::usecase::usecase::UseCase;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -59,7 +58,7 @@ impl UseCase for CreateParticipantUseCase {
 pub struct CreateParticipantInput {
     pub event_id: EventId,
     pub name: ParticipantName,
-    pub email: ParticipantEmail,
+    pub email: Email,
 }
 
 pub enum CreateParticipantOutput {

@@ -16,9 +16,10 @@ use super::{
 };
 use domains_event::{
     event::event_id::EventId,
-    participant::{ParticipantAttendance, ParticipantEmail, ParticipantId, ParticipantName},
+    participant::{ParticipantAttendance, ParticipantId, ParticipantName},
 };
 use libs_modeling::identifier::Identifier;
+use libs_shared_primitive::email::Email;
 use libs_usecase::usecase::usecase::UseCase;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -39,7 +40,7 @@ async fn create_participant_checks_event_and_starts_pending() {
         .handle(CreateParticipantInput {
             event_id: EventId::new(event_id),
             name: ParticipantName::try_new("参加者".to_owned()).unwrap(),
-            email: ParticipantEmail::try_new("person@example.com".to_owned()).unwrap(),
+            email: Email::try_new("person@example.com".to_owned()).unwrap(),
         })
         .await
         .unwrap();
@@ -56,7 +57,7 @@ async fn create_participant_checks_event_and_starts_pending() {
         .handle(CreateParticipantInput {
             event_id: EventId::new(Uuid::from_u128(99)),
             name: ParticipantName::try_new("別の人".to_owned()).unwrap(),
-            email: ParticipantEmail::try_new("other@example.com".to_owned()).unwrap(),
+            email: Email::try_new("other@example.com".to_owned()).unwrap(),
         })
         .await
         .unwrap();

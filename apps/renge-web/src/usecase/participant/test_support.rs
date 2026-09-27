@@ -163,13 +163,14 @@ pub(crate) fn sample_event(event_id: Uuid) -> Event {
 }
 
 pub(crate) fn sample_participant(event_id: Uuid, participant_id: Uuid) -> Participant {
-    use domains_event::participant::{ParticipantAttendance, ParticipantEmail, ParticipantName};
+    use domains_event::participant::{ParticipantAttendance, ParticipantName};
+    use libs_shared_primitive::email::Email;
 
     Participant::new(
         ParticipantId::new(participant_id),
         EventId::new(event_id),
         ParticipantName::try_new("参加者".to_owned()).unwrap(),
-        ParticipantEmail::try_new("person@example.com".to_owned()).unwrap(),
+        Email::try_new("person@example.com".to_owned()).unwrap(),
         ParticipantAttendance::Pending,
     )
 }
